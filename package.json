@@ -1,0 +1,32 @@
+{
+  "name": "@revdoku/api",
+  "version": "1.0.525",
+  "description": "OpenAPI client for @revdoku/api",
+  "author": "Revdoku",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/revdoku/revdoku-typescript.git"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/esm/index.js",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.esm.json",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^4.0 || ^5.0"
+  },
+  "license": "MIT",
+  "files": [
+    "dist",
+    "examples",
+    "README.md",
+    "CONTRIBUTING.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
