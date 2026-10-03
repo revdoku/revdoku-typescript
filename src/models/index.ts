@@ -44,6 +44,8 @@ export * from './FilePagination';
 export * from './GetAccount200Response';
 export * from './GetAccountLimits200Response';
 export * from './GetAccountLimits200ResponseData';
+export * from './GetAccountLimits200ResponseDataUsage';
+export * from './GetAccountLimits200ResponseDataUsageBucketCreations';
 export * from './GetBucketEmailSettings200Response';
 export * from './GetEmail200Response';
 export * from './GetEmail200ResponseData';
