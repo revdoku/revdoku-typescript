@@ -6,7 +6,7 @@ Issues and pull requests are welcome in this package's GitHub repository. The so
 
 1. Fork this repository and create a branch.
 2. Follow the build and setup commands in [examples/README.md](examples/README.md). They use the package in your checkout.
-3. Make your change and run the relevant build and examples. Include a small reproduction or regression test when fixing a bug. Use your own test mailbox for API calls; creating an inbox consumes creation capacity.
+3. Make your change and run the relevant build and examples. Include a small reproduction or regression test when fixing a bug. Use your own test mailbox for API calls; creating a mailbox consumes creation capacity.
 4. Open a pull request describing the behavior before and after your change, and the checks you ran. Keep API keys, account data, local environment files and build output out of the commit.
 
 ## Generated source

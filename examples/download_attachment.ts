@@ -2,17 +2,17 @@ import { writeFile } from "node:fs/promises";
 import { Configuration, DefaultApi } from "@revdoku/api";
 
 const key = process.env.REVDOKU_API_KEY;
-const bucketId = process.env.REVDOKU_BUCKET_ID;
+const mailboxId = process.env.REVDOKU_BUCKET_ID;
 const emailId = process.env.REVDOKU_EMAIL_ID;
 const attachmentId = process.env.REVDOKU_ATTACHMENT_ID;
 const output = process.env.REVDOKU_DOWNLOAD_PATH;
-if (!key || !bucketId || !emailId || !attachmentId || !output)
+if (!key || !mailboxId || !emailId || !attachmentId || !output)
   throw new Error("Set all required environment variables");
 const api = new DefaultApi(new Configuration({ accessToken: key }));
 const {
   data: { download },
 } = await api.downloadEmailAttachment({
-  bucketId,
+  mailboxId,
   emailId,
   attachmentId,
   accountId: process.env.REVDOKU_ACCOUNT_ID || undefined,

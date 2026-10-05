@@ -6,7 +6,7 @@ if (!key || !id) throw new Error("Set REVDOKU_API_KEY and REVDOKU_BUCKET_ID");
 const api = new DefaultApi(new Configuration({ accessToken: key }));
 let offset = 0;
 for (;;) {
-  const { data: page } = await api.listBucketFiles({
+  const { data: page } = await api.listMailboxFiles({
     id,
     limit: 100,
     offset,
