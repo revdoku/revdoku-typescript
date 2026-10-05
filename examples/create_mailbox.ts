@@ -7,7 +7,7 @@ try {
   const result = await api.createMailbox({
     createMailboxRequest: {
       accountId: process.env.REVDOKU_ACCOUNT_ID || undefined,
-      mailbox: { title: "Example mailbox" },
+      mailbox: {},
     },
   });
   console.log(result.data.mailbox?.id, result.data.mailbox?.email?.address);
