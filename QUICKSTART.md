@@ -1,16 +1,23 @@
-## First request
+[Install and configure this SDK](examples/README.md#install-from-source) before running the request below.
 
-Set `REVDOKU_API_KEY` in your environment, then run this in Node.js:
+## List mailboxes
 
-```javascript
-import { Configuration, DefaultApi } from '@revdoku/api';
-const api = new DefaultApi(new Configuration({ accessToken: process.env.REVDOKU_API_KEY }));
-const result = await api.getAccountLimits({ accountId: process.env.REVDOKU_ACCOUNT_ID });
-console.log(result.data);
+After source installation and credential setup, run this from the package directory:
+
+```sh
+node examples/dist/list_mailboxes.js
 ```
 
-Base URL: `https://api.revdoku.com`; generated paths include `/v1`. Keep your bearer API key in private configuration.
-`REVDOKU_ACCOUNT_ID` is optional and selects an account granted to the key; otherwise its default account applies.
-Read resource results from the API's `data` envelope, such as `data.email`, `data.bucket` or `data.limits`.
+This makes one read request and prints each visible mailbox's ID and title:
 
-[Four runnable examples and source setup](examples/README.md) · [API reference](https://revdoku.com/api.md)
+```text
+bkt_RETURNED_ID My Mailbox
+```
+
+[Runnable source](examples/list_mailboxes.ts). Reuse one of these mailboxes for the email walkthrough; this request does not create a mailbox or consume creation capacity.
+
+Keep the SDK's default API origin, `https://api.revdoku.com`. Its paths already include `/v1`; setting the SDK base to the REST base `https://api.revdoku.com/v1` would duplicate that prefix.
+`REVDOKU_ACCOUNT_ID` is optional and selects an account granted to the key; otherwise its default account applies.
+The response retains the API's `data` envelope. Copy one returned mailbox `id` into `REVDOKU_BUCKET_ID` for the walkthrough. An empty mailbox list means there are no visible active mailboxes for this key and account.
+
+[Receive your first email](examples/README.md#receive-and-download) · [SDK fields and errors](examples/README.md#sdk-fields-and-errors) · [API reference](https://revdoku.com/api.md)

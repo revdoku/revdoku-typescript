@@ -1,8 +1,8 @@
 import { Configuration, DefaultApi } from "@revdoku/api";
 
 const key = process.env.REVDOKU_API_KEY;
-const bucketId = process.env.REVDOKU_BUCKET_ID;
-if (!key || !bucketId)
+const mailboxId = process.env.REVDOKU_BUCKET_ID;
+if (!key || !mailboxId)
   throw new Error("Set REVDOKU_API_KEY and REVDOKU_BUCKET_ID");
 const accountId = process.env.REVDOKU_ACCOUNT_ID || undefined;
 const api = new DefaultApi(new Configuration({ accessToken: key }));
@@ -10,7 +10,7 @@ let cursor: string | undefined;
 const seen = new Set<string>();
 for (;;) {
   const { data: page } = await api.listEmails({
-    bucketId,
+    mailboxId,
     accountId,
     limit: 100,
     order: "asc",
@@ -20,7 +20,7 @@ for (;;) {
   for (const summary of page.emails) {
     const {
       data: { email },
-    } = await api.getEmail({ bucketId, emailId: summary.id, accountId });
+    } = await api.getEmail({ mailboxId, emailId: summary.id, accountId });
     console.log(
       JSON.stringify({
         id: email.id,
