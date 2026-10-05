@@ -8,7 +8,7 @@ After source installation and credential setup, run this from the package direct
 node examples/dist/list_mailboxes.js
 ```
 
-This makes one read request and prints each visible mailbox's ID and title:
+This makes one read request and prints each visible mailbox's ID and email address:
 
 ```text
 bkt_RETURNED_ID My Mailbox

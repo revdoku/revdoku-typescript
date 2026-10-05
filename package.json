@@ -1,6 +1,6 @@
 {
   "name": "@revdoku/api",
-  "version": "1.0.527",
+  "version": "1.0.535",
   "description": "OpenAPI client for @revdoku/api",
   "author": "Revdoku",
   "repository": {
