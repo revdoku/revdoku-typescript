@@ -1,13 +1,13 @@
-import { Configuration, DefaultApi } from "@revdoku/api";
+import { Revdoku } from "@revdoku/api";
 
 const key = process.env.REVDOKU_API_KEY;
 const id = process.env.REVDOKU_BUCKET_ID;
 if (!key || !id) throw new Error("Set REVDOKU_API_KEY and REVDOKU_BUCKET_ID");
-const api = new DefaultApi(new Configuration({ accessToken: key }));
+const api = new Revdoku({ apiKey: key, accountId: process.env.REVDOKU_ACCOUNT_ID || undefined });
 let offset = 0;
 for (;;) {
-  const { data: page } = await api.listMailboxFiles({
-    id,
+  const { data: page } = await api.listFiles({
+    mailboxId: id,
     limit: 100,
     offset,
     accountId: process.env.REVDOKU_ACCOUNT_ID || undefined,

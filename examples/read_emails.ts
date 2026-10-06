@@ -1,11 +1,11 @@
-import { Configuration, DefaultApi } from "@revdoku/api";
+import { Revdoku } from "@revdoku/api";
 
 const key = process.env.REVDOKU_API_KEY;
 const mailboxId = process.env.REVDOKU_BUCKET_ID;
 if (!key || !mailboxId)
   throw new Error("Set REVDOKU_API_KEY and REVDOKU_BUCKET_ID");
 const accountId = process.env.REVDOKU_ACCOUNT_ID || undefined;
-const api = new DefaultApi(new Configuration({ accessToken: key }));
+const api = new Revdoku({ apiKey: key, accountId: process.env.REVDOKU_ACCOUNT_ID || undefined });
 let cursor: string | undefined;
 const seen = new Set<string>();
 for (;;) {

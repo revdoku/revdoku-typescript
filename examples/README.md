@@ -33,6 +33,7 @@ Run only the command for your current walkthrough step, from the package directo
 | Create mailbox | `node examples/dist/create_mailbox.js` | [Source](create_mailbox.ts) |
 | Read emails | `node examples/dist/read_emails.js` | [Source](read_emails.ts) |
 | Download attachment | `node examples/dist/download_attachment.js` | [Source](download_attachment.ts) |
+| Upload file | `node examples/dist/upload_file.js ./notes.txt` | [Source](upload_file.ts) |
 | List files | `node examples/dist/list_files.js` | [Source](list_files.ts) |
 
 ## Configure
@@ -50,7 +51,8 @@ Run only the command for your current walkthrough step, from the package directo
 | Task | Access needed |
 | --- | --- |
 | List/read emails, download attachments, list files | Read access to that mailbox |
-| Discover its receiving address through the API, mark email read, upload files | Write access to that mailbox |
+| Mark email read | Read access to that mailbox |
+| Read detailed receiving settings or upload files | Write access to that mailbox |
 | Create another mailbox | Account-wide admin permission; a key limited to selected mailboxes cannot create mailboxes |
 | Delete an email | Admin access to that mailbox |
 
@@ -87,7 +89,7 @@ The [first request](../QUICKSTART.md) checks the connection. The SDK already use
    ```
 
    Run **Download attachment**. It prints the saved path; open that file to verify its contents. If the path already exists, choose another path. The example refuses to overwrite files.
-5. **Run List files** to see the mailbox's stored files, including the original email and attachments. It follows every file page.
+5. **Run List files** to see the mailbox’s stored files. It follows every file page.
 
 ## Understand the results
 
@@ -134,16 +136,16 @@ Build and pack this checkout, then install that tarball in your application:
 ```sh
 npm pack
 cd /absolute/path/to/your-app
-npm install /absolute/path/to/revdoku-typescript/revdoku-api-1.0.535.tgz
+npm install /absolute/path/to/revdoku-typescript/revdoku-api-2.0.0.tgz
 ```
 
-Use `import { Configuration, DefaultApi } from '@revdoku/api'` in an ES module (`.mjs`, or a project with `"type": "module"`). This also works from TypeScript. Registry installation is available only after an npm release exists.
+Use `import { Revdoku } from '@revdoku/api'` in an ES module (`.mjs`, or a project with `"type": "module"`). This also works from TypeScript. Registry installation is available only after an npm release exists.
 
 ### SDK fields and errors
 
 JSON fields are converted to these SDK members: `result.data.email.bodyText`, `email.bodyStatus`, `page.pagination.hasMore`, `page.pagination.nextCursor`.
 
-For API errors, use `ResponseError.response.status`, `await error.response.json()`, and `error.response.headers.get("Retry-After")`. The [Create mailbox source](create_mailbox.ts) shows how to report a failed request without repeating it.
+For API errors, catch `RevdokuError` and read `status`, `code`, `details` and `retryAfter`. The [Create mailbox source](create_mailbox.ts) shows how to report a failed request without repeating it.
 
 ### Repeat a source build
 

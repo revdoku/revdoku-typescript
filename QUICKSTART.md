@@ -1,4 +1,17 @@
-[Install and configure this SDK](examples/README.md#install-from-source) before running the request below.
+# Quickstart
+
+Clone [the SDK repository](https://github.com/revdoku/revdoku-typescript) and enter its directory.
+
+Requires Node.js 22 or newer. From the cloned package directory:
+
+```sh
+npm install --ignore-scripts
+npm run build
+npm --prefix examples install --ignore-scripts
+npm --prefix examples run build
+```
+
+Set `REVDOKU_API_KEY` in your environment.
 
 ## List mailboxes
 
@@ -11,7 +24,7 @@ node examples/dist/list_mailboxes.js
 This makes one read request and prints each visible mailbox's ID and email address:
 
 ```text
-bkt_RETURNED_ID My Mailbox
+bkt_RETURNED_ID example@revdokumail.com
 ```
 
 [Runnable source](examples/list_mailboxes.ts). Reuse one of these mailboxes for the email walkthrough; this request does not create a mailbox or consume creation capacity.
