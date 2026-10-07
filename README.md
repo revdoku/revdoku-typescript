@@ -13,7 +13,7 @@ cd revdoku-typescript
 npm install
 npm pack
 # From your application, install the .tgz file printed by npm pack:
-npm install /absolute/path/to/revdoku-api-2.0.0.tgz
+npm install /absolute/path/to/revdoku-api-2.0.1.tgz
 ```
 
 Set `REVDOKU_API_KEY` in your backend environment, then run:
@@ -32,8 +32,6 @@ CommonJS also works: `const { Revdoku } = require('@revdoku/api')`.
 Keep API keys on your backend. Helper methods use the default account unless you set `accountId` on the client
 or a request. When calling the advanced `api` object, pass `accountId` explicitly
 if you need another account.
-
-[Upgrade from v1](MIGRATION.md).
 
 ## Signup
 

@@ -136,7 +136,7 @@ Build and pack this checkout, then install that tarball in your application:
 ```sh
 npm pack
 cd /absolute/path/to/your-app
-npm install /absolute/path/to/revdoku-typescript/revdoku-api-2.0.0.tgz
+npm install /absolute/path/to/revdoku-typescript/revdoku-api-2.0.1.tgz
 ```
 
 Use `import { Revdoku } from '@revdoku/api'` in an ES module (`.mjs`, or a project with `"type": "module"`). This also works from TypeScript. Registry installation is available only after an npm release exists.
