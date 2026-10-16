@@ -1,10 +1,8 @@
-import { Revdoku, RevdokuError } from '@revdoku/api';
+import { Revdoku, RevdokuError } from 'revdoku';
 
-const key = process.env.REVDOKU_API_KEY;
-if (!key) throw new Error('Set REVDOKU_API_KEY');
-const api = new Revdoku({ apiKey: key, accountId: process.env.REVDOKU_ACCOUNT_ID || undefined });
+const client = new Revdoku({ accountId: process.env.REVDOKU_ACCOUNT_ID || undefined });
 try {
-  const result = await api.createMailbox({
+  const result = await client.createMailbox({
     username: process.env.REVDOKU_MAILBOX_USERNAME || undefined,
     domain: process.env.REVDOKU_MAILBOX_DOMAIN || undefined,
   });
@@ -12,8 +10,9 @@ try {
 } catch (error) {
   if (error instanceof RevdokuError) {
     console.error(`HTTP ${error.status}: ${error.code}`, JSON.stringify(error.details));
-    if (error.retryAfter) console.error(`Retry-After: ${error.retryAfter}`);
+    if (error.retryAfter !== undefined) console.error(`Retry after ${error.retryAfter} seconds`);
   }
+  // Never repeat a creation automatically: it may have succeeded.
   console.error('Creation was not confirmed. Check existing mailboxes before another creation attempt.');
   process.exitCode = 1;
 }

@@ -13,4 +13,4 @@ Issues and pull requests are welcome in this package's GitHub repository. The so
 
 This package is generated from the [Revdoku OpenAPI document](https://revdoku.com/openapi.json) with pinned generator settings. You can propose changes directly in this repository. Maintainers also apply accepted fixes to the canonical schema, generator or example sources so later releases preserve them.
 
-The complete API reference is [api.md](https://revdoku.com/api.md). For support, email support@revdoku.com.
+The API guide is [api.md](https://revdoku.com/api.md), and the operation reference is [REFERENCE.md](REFERENCE.md). For support, email support@revdoku.com.

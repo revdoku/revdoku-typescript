@@ -1,20 +1,23 @@
 # Receive your first email
 
-This walkthrough uses the SDK in this checkout. A **mailbox** has its own receiving address and private file storage. Keep its `bkt_...` ID for subsequent requests. The examples run on your computer or backend; keep the API key there.
+These examples run the SDK from this repository. To use the SDK in your own
+application, install it from the package registry instead: see
+[Use the SDK in your application](#use-the-sdk-in-your-application).
 
-## Install from source
+A **mailbox** has its own receiving address and private file storage. Keep its
+`bkt_...` ID for later requests. Run the examples on your computer or backend,
+and keep the API key there.
 
-The public GitHub source is available now. These commands do not depend on a package-registry release. Use a POSIX shell, or WSL on Windows:
+## Build the examples
+
+Clone this repository. Use a POSIX shell, or WSL on Windows:
 
 ```sh
 git clone --depth 1 https://github.com/revdoku/revdoku-typescript.git
 cd revdoku-typescript
-git rev-parse HEAD
 ```
 
-Record the printed commit ID with your dependency configuration so you can [repeat this source build](#repeat-a-source-build).
-
-Requires Node.js 22 or newer. From the cloned package directory:
+Requires Node.js 22 or newer. From the cloned repository, build the package and the examples:
 
 ```sh
 npm install --ignore-scripts
@@ -23,9 +26,11 @@ npm --prefix examples install --ignore-scripts
 npm --prefix examples run build
 ```
 
+The examples use the package that you built in this checkout.
+
 ### Run an example
 
-Run only the command for your current walkthrough step, from the package directory:
+Run only the command for your current step, from the repository directory:
 
 | Step | Command | Source |
 | --- | --- | --- |
@@ -39,48 +44,53 @@ Run only the command for your current walkthrough step, from the package directo
 ## Configure
 
 1. [Sign up](https://app.revdoku.com/users/sign_up) or sign in. Signup creates a first mailbox.
-2. Open [Account → Access](https://app.revdoku.com/account/access), create an API key, and select its account and mailbox access. You can also start from **Connect via API**.
-3. Set the key in your local environment. Replace the placeholder below; keep real keys out of committed files.
+2. In the dashboard, select **Connect via API** and copy a new API key. You can also manage keys in [Account → Access](https://app.revdoku.com/account/access).
+3. Set the key in your environment. Keep real keys out of committed files.
 
    ```sh
    export REVDOKU_API_KEY="YOUR_API_KEY"
    ```
 
-4. Leave `REVDOKU_ACCOUNT_ID` unset for the key's default account. To use another granted account, get its ID with `GET /v1/accounts` or `revdoku accounts`, then set `export REVDOKU_ACCOUNT_ID="acct_RETURNED_ID"`. Keep that selection for every step. Selecting an account in the dashboard or supplying a mailbox ID does not change the key's default account.
+4. Leave `REVDOKU_ACCOUNT_ID` unset to use the key's default account. To use another granted account, set `export REVDOKU_ACCOUNT_ID="acct_RETURNED_ID"`. Keep that value for every step.
 
 | Task | Access needed |
 | --- | --- |
-| List/read emails, download attachments, list files | Read access to that mailbox |
-| Mark email read | Read access to that mailbox |
+| List and read emails, download attachments, list files | Read access to that mailbox |
+| Mark an email read | Read access to that mailbox |
 | Read detailed receiving settings or upload files | Write access to that mailbox |
-| Create another mailbox | Account-wide admin permission; a key limited to selected mailboxes cannot create mailboxes |
+| Create another mailbox | Admin access to the account. A key for selected mailboxes cannot create mailboxes. |
 | Delete an email | Admin access to that mailbox |
 
-The [first request](../QUICKSTART.md) checks the connection. The SDK already uses `https://api.revdoku.com` and adds `/v1` in its generated paths. Keep that default. When making raw HTTP requests instead, use `https://api.revdoku.com/v1` as the REST base URL.
+Requests go to `https://api.revdoku.com`. Every path starts with `/v1`, for
+example `https://api.revdoku.com/v1/mailboxes`. The SDK takes the origin without
+`/v1`. Keep its default.
 
 ## Receive and download
 
-1. **Choose a mailbox.** Reuse the starter mailbox: run the **List mailboxes** request in [QUICKSTART.md](../QUICKSTART.md) and copy its `id`. Use the dashboard's receiving address, or ask a mailbox writer for it. If you need a separate mailbox and have account-wide admin access, run **Create mailbox** from the command table above once. It prints a mailbox ID and ready address, for example:
+1. **Choose a mailbox.** Run **List mailboxes** and copy the `id` of a mailbox. If you need a separate mailbox and have admin access to the account, run **Create mailbox** once. Both print a mailbox ID and its address, for example:
 
    ```text
    bkt_RETURNED_ID example@revdokumail.com
    ```
 
-   Save the actual ID:
+   Save the ID:
 
    ```sh
-   export REVDOKU_BUCKET_ID="bkt_RETURNED_ID"
+   export REVDOKU_MAILBOX_ID="bkt_RETURNED_ID"
    ```
 
-2. **Send a test email** from your normal email app to that exact receiving address. Use a subject such as `First API test` and attach a small text file. Revdoku receives this message; the examples do not send it.
-3. **Run Read emails.** It lists unread messages, follows every page and fetches each message's text and attachment metadata. A printed result contains fields like these (IDs and content will differ):
+2. **Send a test email** from your normal email app to that address. Use a subject such as `First API test` and attach a small text file.
+3. **Run Read emails.** It lists unread emails, follows every page and gets the text and attachment metadata of each email. It skips emails with the Junk label. The output has fields like these (IDs and content differ):
 
    ```json
    {"id":"eml_RETURNED_ID","subject":"First API test","body_status":"complete","body_text":"Hello","attachments":[{"id":"df_RETURNED_ID","filename":"hello.txt"}]}
    ```
 
-   A successful exit with no output means there are no unread messages in this account and mailbox. Wait for delivery and run it again; if you already opened the email in the dashboard, mark it unread there or remove the example's unread filter to list all messages. Reading through this example leaves shared read status unchanged.
-4. **Download one attachment.** Copy the email's `id` and an entry's `attachments[].id` from that output. Choose a local output path that does not exist:
+   When AI labels are on, they check a new email for up to about one minute. The
+   example waits for them, so the first run after delivery can take that long.
+
+   No output means that the mailbox has no unread emails. Wait for delivery and run it again. If you opened the email in the dashboard, mark it unread there. Reading through this example does not change the read status.
+4. **Download one attachment.** Copy the email `id` and an `attachments[].id` from that output. Choose a local path that does not exist:
 
    ```sh
    export REVDOKU_EMAIL_ID="eml_RETURNED_ID"
@@ -88,70 +98,74 @@ The [first request](../QUICKSTART.md) checks the connection. The SDK already use
    export REVDOKU_DOWNLOAD_PATH="./hello.txt"
    ```
 
-   Run **Download attachment**. It prints the saved path; open that file to verify its contents. If the path already exists, choose another path. The example refuses to overwrite files.
-5. **Run List files** to see the mailbox’s stored files. It follows every file page.
+   Run **Download attachment**. It prints the saved path. The example never overwrites a file.
+5. **Run Upload file** with a local file, then **List files** to see the files in the mailbox.
 
 ## Understand the results
 
 | Value | Meaning |
 | --- | --- |
-| `data.email` | Message returned by Get email; lists contain summaries under `data.emails` |
-| `body_status` | `complete`, `empty`, `truncated` or `unavailable`; `body_text` may be null |
-| Email `id` | Revdoku `eml_...` ID used in read/download requests; the sender's `message_id` header is different |
-| Attachment `id` | `df_...` ID from that email's attachment metadata |
-| `data.download` | Temporary URL and metadata returned by the SDK download method, rather than file bytes |
+| `data.email` | The email from `getEmail` (TypeScript) or `get_email` (Python). Lists have summaries in `data.emails`. |
+| `body_status` | `complete`, `empty`, `truncated` or `unavailable`. `body_text` can be null. |
+| Email `id` | The Revdoku `eml_...` ID. The sender's `message_id` header is a different value. |
+| Attachment `id` | The `df_...` ID from the attachment metadata of the email. |
+| `data.download` | A temporary URL and metadata, from the link request for an attachment. |
 
-Field names above describe JSON. See [SDK fields and errors](#sdk-fields-and-errors) for the actual member names in this SDK.
+The names above are JSON names. See [SDK fields and errors](#sdk-fields-and-errors) for the names in this SDK.
 
-The download example obtains a fresh URL, fetches its bytes using a separate HTTP client **without the API key**, and saves to your chosen path. It buffers one attachment in memory. URLs expire after 15 minutes; request a new descriptor if one expires. n8n's download operation instead returns binary data, while Zapier returns a file reference for the next action. [Compare integrations](https://github.com/revdoku/revdoku/blob/main/guides/api-packages.md#downloads).
+The download helper gets a new link and fetches the bytes **without the API
+key**. It keeps one attachment in memory. Links expire after 15 minutes.
 
 ## Handle failures
 
-The **Create mailbox** source demonstrates the SDK's native error response. It prints the HTTP error and returned details, then exits unsuccessfully. It never repeats creation automatically.
+The **Create mailbox** example prints the error code and details, then exits. It never repeats the creation.
 
 | Failure | Next step |
 | --- | --- |
-| `401 UNAUTHORIZED` | Check that the API key is set and still valid. |
-| `403 FORBIDDEN` | Check the key's selected account, mailboxes and permission for this operation. |
-| `404` for a mailbox or email | Check the account selection and IDs; inaccessible resources may also return 404. |
-| `503 EMAIL_NOT_READY` | Creation may have succeeded. Save `error.details.mailbox_id`, read that mailbox's email settings, and inspect `blocked_reason` before deciding what to do next. |
-| Timeout or lost creation response | List mailboxes and reconcile the result before deciding whether to create another one. |
-| `429` rate limit | For reads, wait for `Retry-After` before a bounded retry. |
-| `MAILBOX_CREATION_LIMIT_REACHED` | Wait until `error.details.resets_at` or change capacity; immediate retries cannot help. |
+| `401 UNAUTHORIZED` | Make sure that the API key is set and valid. |
+| `403 FORBIDDEN` | Check the account, mailboxes and permissions of the key. |
+| `404` for a mailbox or email | Check the account and the IDs. The API also returns 404 for resources that the key cannot see. |
+| `503 EMAIL_NOT_READY` | The creation can have succeeded. Read the mailbox in `error.details.mailbox_id` before you do anything else. |
+| Timeout or lost creation response | List mailboxes before you create another one. |
+| `429` or `503` with `Retry-After`, such as `503 EMAIL_INDEX_BUILDING` | For reads, wait that many seconds, then try again a limited number of times. |
+| `503 EMAIL_LABELING_PENDING` | AI labels are still checking a new email. **Read emails** waits `Retry-After` seconds and reads it again, for up to about one minute. |
+| `MAILBOX_CREATION_LIMIT_REACHED` | Wait until `error.details.resets_at`. An immediate retry cannot succeed. |
 
-Every successful creation consumes capacity. Deleting the mailbox does not refund it. [Creation recovery](https://revdoku.com/api.md#creation-result) and [retry guidance](https://revdoku.com/api.md#rate-limits) explain the API behavior.
+Each successful creation uses creation capacity. Deleting the mailbox does not
+give it back. See [Errors](https://revdoku.com/api.md#errors).
 
 ## Run continuously
 
-These examples are one-time reads and writes. Running **Read emails** again prints messages that remain unread. Shared read status can be changed by people and other integrations; it is not your application's processing checkpoint.
+These examples run once. Running **Read emails** again prints the emails that
+are still unread. People and other integrations can change the read status, so
+it is not a processing checkpoint for your application.
 
-For a recurring consumer, list in arrival order and persist `pagination.next_cursor` after successful processing, including on empty pages. Reuse it with the same account, mailbox, order and filters; deduplicate effects using the email ID. Continue while `has_more` is true even when a page contains fewer than the requested number of items. [Polling, n8n and Zapier comparison](https://github.com/revdoku/revdoku/blob/main/guides/api-packages.md#new-email-processing).
+For a recurring consumer, list in ascending order and save
+`pagination.next_cursor` after each page, also after an empty page. Use it with
+the same account, mailbox, order and filters. Deduplicate by email ID. Continue
+while `has_more` is `true`, even when a page has fewer items than the limit.
+See [List emails](https://revdoku.com/api/reference/emails.md#list-emails).
 
 ## Language reference
 
 ### Use the SDK in your application
 
-Build and pack this checkout, then install that tarball in your application:
+Install the package from npm:
 
 ```sh
-npm pack
-cd /absolute/path/to/your-app
-npm install /absolute/path/to/revdoku-typescript/revdoku-api-2.0.1.tgz
+npm install revdoku
 ```
 
-Use `import { Revdoku } from '@revdoku/api'` in an ES module (`.mjs`, or a project with `"type": "module"`). This also works from TypeScript. Registry installation is available only after an npm release exists.
+```ts
+import { Revdoku } from 'revdoku';
+
+const client = new Revdoku(); // Reads REVDOKU_API_KEY.
+```
+
+Use an ES module (`.mjs`, or a project with `"type": "module"`) or TypeScript. CommonJS uses `require('revdoku')`. Pass `apiKey` to use a different key.
 
 ### SDK fields and errors
 
-JSON fields are converted to these SDK members: `result.data.email.bodyText`, `email.bodyStatus`, `page.pagination.hasMore`, `page.pagination.nextCursor`.
+SDK fields are camelCase: `result.data.email.bodyText`, `email.bodyStatus`, `page.pagination.hasMore`, `page.pagination.nextCursor`. The JSON API uses snake_case.
 
-For API errors, catch `RevdokuError` and read `status`, `code`, `details` and `retryAfter`. The [Create mailbox source](create_mailbox.ts) shows how to report a failed request without repeating it.
-
-### Repeat a source build
-
-In a fresh checkout, replace `RECORDED_COMMIT_ID` with the commit you saved above, then rerun the installation commands:
-
-```sh
-git fetch --depth 1 origin RECORDED_COMMIT_ID
-git checkout --detach FETCH_HEAD
-```
+For API errors, catch `RevdokuError` and read `status`, `code`, `details` and `retryAfter`. The [Create mailbox source](create_mailbox.ts) reports a failed request without repeating it.

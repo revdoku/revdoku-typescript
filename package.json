@@ -1,11 +1,11 @@
 {
-  "name": "@revdoku/api",
-  "version": "2.0.1",
-  "description": "OpenAPI client for @revdoku/api",
+  "name": "revdoku",
+  "version": "2.1.0",
+  "description": "Revdoku API client for Node.js: mailboxes for AI agents, with attachments and private file storage.",
   "author": "Revdoku",
   "repository": {
     "type": "git",
-    "url": "https://github.com/revdoku/revdoku-typescript.git"
+    "url": "git+https://github.com/revdoku/revdoku-typescript.git"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,17 +15,31 @@
     "prepare": "npm run build"
   },
   "devDependencies": {
-    "typescript": "^4.0 || ^5.0",
+    "typescript": "~5.9.3",
     "@types/node": "^22.0.0"
+  },
+  "keywords": [
+    "revdoku",
+    "email",
+    "inbox",
+    "mailbox",
+    "inbound-email",
+    "attachments",
+    "ai-agents",
+    "file-storage",
+    "api",
+    "sdk"
+  ],
+  "homepage": "https://revdoku.com/docs/sdks/typescript/",
+  "bugs": {
+    "url": "https://github.com/revdoku/revdoku-typescript/issues"
   },
   "license": "MIT",
   "files": [
     "dist",
-    "examples",
     "README.md",
-    "QUICKSTART.md",
-    "CONTRIBUTING.md",
-    "LICENSE"
+    "LICENSE",
+    "REFERENCE.md"
   ],
   "publishConfig": {
     "access": "public"

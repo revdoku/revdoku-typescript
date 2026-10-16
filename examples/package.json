@@ -6,7 +6,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@revdoku/api": "file:.."
+    "revdoku": "file:.."
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
