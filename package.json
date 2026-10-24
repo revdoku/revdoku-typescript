@@ -1,6 +1,6 @@
 {
   "name": "revdoku",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Revdoku API client for Node.js: mailboxes for AI agents, with attachments and private file storage.",
   "author": "Revdoku",
   "repository": {
