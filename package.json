@@ -1,7 +1,7 @@
 {
   "name": "revdoku",
-  "version": "2.2.0",
-  "description": "Revdoku API client for Node.js: mailboxes for AI agents, with attachments and private file storage.",
+  "version": "3.0.0",
+  "description": "Revdoku API client for Node.js: publish docs sites for people and AI agents, with a support mailbox and file storage.",
   "author": "Revdoku",
   "repository": {
     "type": "git",
@@ -20,17 +20,20 @@
   },
   "keywords": [
     "revdoku",
-    "email",
-    "inbox",
-    "mailbox",
-    "inbound-email",
-    "attachments",
+    "docs",
+    "documentation",
+    "api-docs",
+    "docs-site",
     "ai-agents",
+    "mcp",
+    "llms-txt",
+    "support-email",
+    "mailbox",
     "file-storage",
     "api",
     "sdk"
   ],
-  "homepage": "https://revdoku.com/docs/sdks/typescript/",
+  "homepage": "https://docs.revdoku.com/sdks/typescript",
   "bugs": {
     "url": "https://github.com/revdoku/revdoku-typescript/issues"
   },

@@ -1,11 +1,11 @@
-# Receive your first email
+# Read your first support ticket
 
 These examples run the SDK from this repository. To use the SDK in your own
 application, install it from the package registry instead: see
 [Use the SDK in your application](#use-the-sdk-in-your-application).
 
-A **mailbox** has its own receiving address and private file storage. Keep its
-`bkt_...` ID for later requests. Run the examples on your computer or backend,
+A **bucket** has its own email address and private file storage. Each conversation
+that arrives there is a support ticket. Keep the bucket's `bkt_...` ID for later requests. Run the examples on your computer or backend,
 and keep the API key there.
 
 ## Build the examples
@@ -34,16 +34,16 @@ Run only the command for your current step, from the repository directory:
 
 | Step | Command | Source |
 | --- | --- | --- |
-| List mailboxes | `node examples/dist/list_mailboxes.js` | [Source](list_mailboxes.ts) |
-| Create mailbox | `node examples/dist/create_mailbox.js` | [Source](create_mailbox.ts) |
-| Read emails | `node examples/dist/read_emails.js` | [Source](read_emails.ts) |
+| List buckets | `node examples/dist/list_buckets.js` | [Source](list_buckets.ts) |
+| Create bucket | `node examples/dist/create_bucket.js` | [Source](create_bucket.ts) |
+| Read tickets | `node examples/dist/read_tickets.js` | [Source](read_tickets.ts) |
 | Download attachment | `node examples/dist/download_attachment.js` | [Source](download_attachment.ts) |
 | Upload file | `node examples/dist/upload_file.js ./notes.txt` | [Source](upload_file.ts) |
 | List files | `node examples/dist/list_files.js` | [Source](list_files.ts) |
 
 ## Configure
 
-1. [Sign up](https://app.revdoku.com/users/sign_up) or sign in. Signup creates a first mailbox.
+1. [Sign up](https://app.revdoku.com/users/sign_up) or sign in. The setup steps after signup create your first bucket.
 2. In the dashboard, select **Connect via API** and copy a new API key. You can also manage keys in [Account → Access](https://app.revdoku.com/account/access).
 3. Set the key in your environment. Keep real keys out of committed files.
 
@@ -55,19 +55,18 @@ Run only the command for your current step, from the repository directory:
 
 | Task | Access needed |
 | --- | --- |
-| List and read emails, download attachments, list files | Read access to that mailbox |
-| Mark an email read | Read access to that mailbox |
-| Read detailed receiving settings or upload files | Write access to that mailbox |
-| Create another mailbox | Admin access to the account. A key for selected mailboxes cannot create mailboxes. |
-| Delete an email | Admin access to that mailbox |
+| List and read tickets, download attachments, list files | Read access to that bucket |
+| Reply to a ticket, solve it, change its labels, upload files | Write access to that bucket |
+| Create another bucket | Admin access to the account. A key for selected buckets cannot create buckets. |
+| Delete a message | Admin access to that bucket |
 
 Requests go to `https://api.revdoku.com`. Every path starts with `/v1`, for
-example `https://api.revdoku.com/v1/mailboxes`. The SDK takes the origin without
+example `https://api.revdoku.com/v1/buckets`. The SDK takes the origin without
 `/v1`. Keep its default.
 
 ## Receive and download
 
-1. **Choose a mailbox.** Run **List mailboxes** and copy the `id` of a mailbox. If you need a separate mailbox and have admin access to the account, run **Create mailbox** once. Both print a mailbox ID and its address, for example:
+1. **Choose a bucket.** Run **List buckets** and copy the `id` of a bucket. If you need a separate bucket and have admin access to the account, run **Create bucket** once. Both print a bucket ID and its address, for example:
 
    ```text
    bkt_RETURNED_ID example@revdokumail.com
@@ -76,39 +75,41 @@ example `https://api.revdoku.com/v1/mailboxes`. The SDK takes the origin without
    Save the ID:
 
    ```sh
-   export REVDOKU_MAILBOX_ID="bkt_RETURNED_ID"
+   export REVDOKU_BUCKET_ID="bkt_RETURNED_ID"
    ```
 
 2. **Send a test email** from your normal email app to that address. Use a subject such as `First API test` and attach a small text file.
-3. **Run Read emails.** It lists unread emails, follows every page and gets the text and attachment metadata of each email. It skips emails with the Junk label. The output has fields like these (IDs and content differ):
+3. **Run Read tickets.** It lists open tickets, follows every page and gets the text and attachment metadata of each received message. It skips messages with the Junk label. The output has fields like these (IDs and content differ):
 
    ```json
-   {"id":"eml_RETURNED_ID","subject":"First API test","body_status":"complete","body_text":"Hello","attachments":[{"id":"df_RETURNED_ID","filename":"hello.txt"}]}
+   {"ticket_id":"tkt_RETURNED_ID","number":1,"channel":"email","id":"eml_RETURNED_ID","subject":"First API test","body_status":"complete","body_text":"Hello","attachments":[{"id":"df_RETURNED_ID","filename":"hello.txt"}]}
    ```
 
-   When AI labels are on, they check a new email for up to about one minute. The
-   example waits for them, so the first run after delivery can take that long.
+   When the AI filter is on, it checks a new message for up to about one minute. The
+   example waits for it, so the first run after delivery can take that long.
 
-   No output means that the mailbox has no unread emails. Wait for delivery and run it again. If you opened the email in the dashboard, mark it unread there. Reading through this example does not change the read status.
-4. **Download one attachment.** Copy the email `id` and an `attachments[].id` from that output. Choose a local path that does not exist:
+   No output means that the bucket has no open tickets. Wait for delivery and run it again. Reading through this example does not change a ticket.
+4. **Download one attachment.** Copy the `ticket_id`, the message `id` and an `attachments[].id` from that output. Choose a local path that does not exist:
 
    ```sh
-   export REVDOKU_EMAIL_ID="eml_RETURNED_ID"
+   export REVDOKU_TICKET_ID="tkt_RETURNED_ID"
+   export REVDOKU_MESSAGE_ID="eml_RETURNED_ID"
    export REVDOKU_ATTACHMENT_ID="df_RETURNED_ID"
    export REVDOKU_DOWNLOAD_PATH="./hello.txt"
    ```
 
    Run **Download attachment**. It prints the saved path. The example never overwrites a file.
-5. **Run Upload file** with a local file, then **List files** to see the files in the mailbox.
+5. **Run Upload file** with a local file, then **List files** to see the files in the bucket.
 
 ## Understand the results
 
 | Value | Meaning |
 | --- | --- |
-| `data.email` | The email from `getEmail` (TypeScript) or `get_email` (Python). Lists have summaries in `data.emails`. |
+| `data.message` | The message from `getTicketMessage` (TypeScript) or `get_ticket_message` (Python). `data.messages` lists the messages of a ticket, and `data.tickets` lists tickets. |
 | `body_status` | `complete`, `empty`, `truncated` or `unavailable`. `body_text` can be null. |
-| Email `id` | The Revdoku `eml_...` ID. The sender's `message_id` header is a different value. |
-| Attachment `id` | The `df_...` ID from the attachment metadata of the email. |
+| Ticket `id` | The `tkt_...` ID of the conversation. `number` is the short number that people see. |
+| Message `id` | The Revdoku `eml_...` ID. The sender's `message_id` header is a different value. |
+| Attachment `id` | The `df_...` ID from the attachment metadata of the message. |
 | `data.download` | A temporary URL and metadata, from the link request for an attachment. |
 
 The names above are JSON names. See [SDK fields and errors](#sdk-fields-and-errors) for the names in this SDK.
@@ -118,33 +119,33 @@ key**. It keeps one attachment in memory. Links expire after 15 minutes.
 
 ## Handle failures
 
-The **Create mailbox** example prints the error code and details, then exits. It never repeats the creation.
+The **Create bucket** example prints the error code and details, then exits. It never repeats the creation.
 
 | Failure | Next step |
 | --- | --- |
 | `401 UNAUTHORIZED` | Make sure that the API key is set and valid. |
-| `403 FORBIDDEN` | Check the account, mailboxes and permissions of the key. |
-| `404` for a mailbox or email | Check the account and the IDs. The API also returns 404 for resources that the key cannot see. |
-| `503 EMAIL_NOT_READY` | The creation can have succeeded. Read the mailbox in `error.details.mailbox_id` before you do anything else. |
-| Timeout or lost creation response | List mailboxes before you create another one. |
+| `403 FORBIDDEN` | Check the account, buckets and permissions of the key. |
+| `404` for a bucket, ticket or message | Check the account and the IDs. The API also returns 404 for resources that the key cannot see. |
+| `503 EMAIL_NOT_READY` | The creation can have succeeded. Read the bucket in `error.details.bucket_id` before you do anything else. |
+| Timeout or lost creation response | List buckets before you create another one. |
 | `429` or `503` with `Retry-After`, such as `503 EMAIL_INDEX_BUILDING` | For reads, wait that many seconds, then try again a limited number of times. |
-| `503 EMAIL_LABELING_PENDING` | AI labels are still checking a new email. **Read emails** waits `Retry-After` seconds and reads it again, for up to about one minute. |
-| `MAILBOX_CREATION_LIMIT_REACHED` | Wait until `error.details.resets_at`. An immediate retry cannot succeed. |
+| `503 EMAIL_LABELING_PENDING` | The AI filter is still checking a new message. **Read tickets** waits `Retry-After` seconds and reads it again, for up to about one minute. |
+| `BUCKET_CREATION_LIMIT_REACHED` | Wait until `error.details.resets_at`. An immediate retry cannot succeed. |
 
-Each successful creation uses creation capacity. Deleting the mailbox does not
-give it back. See [Errors](https://revdoku.com/api.md#errors).
+Each successful creation uses creation capacity. Deleting the bucket does not
+give it back. See [Errors](https://docs.revdoku.com/api#errors).
 
 ## Run continuously
 
-These examples run once. Running **Read emails** again prints the emails that
-are still unread. People and other integrations can change the read status, so
-it is not a processing checkpoint for your application.
+These examples run once. Running **Read tickets** again prints the tickets that
+are still open. People and other integrations can solve a ticket, so its status
+is not a processing checkpoint for your application.
 
-For a recurring consumer, list in ascending order and save
-`pagination.next_cursor` after each page, also after an empty page. Use it with
-the same account, mailbox, order and filters. Deduplicate by email ID. Continue
-while `has_more` is `true`, even when a page has fewer items than the limit.
-See [List emails](https://revdoku.com/api/reference/emails.md#list-emails).
+For a recurring consumer, list tickets with `updated_after` set to the newest
+`updated_at` that you saw, and follow `pagination.next_cursor` while `has_more`
+is `true`. A ticket comes back when it gets a new message, so deduplicate by
+message ID.
+See [List tickets](https://docs.revdoku.com/api-reference/tickets#list-tickets).
 
 ## Language reference
 
@@ -166,6 +167,6 @@ Use an ES module (`.mjs`, or a project with `"type": "module"`) or TypeScript. C
 
 ### SDK fields and errors
 
-SDK fields are camelCase: `result.data.email.bodyText`, `email.bodyStatus`, `page.pagination.hasMore`, `page.pagination.nextCursor`. The JSON API uses snake_case.
+SDK fields are camelCase: `result.data.message.bodyText`, `message.bodyStatus`, `page.pagination.hasMore`, `page.pagination.nextCursor`. The JSON API uses snake_case.
 
-For API errors, catch `RevdokuError` and read `status`, `code`, `details` and `retryAfter`. The [Create mailbox source](create_mailbox.ts) reports a failed request without repeating it.
+For API errors, catch `RevdokuError` and read `status`, `code`, `details` and `retryAfter`. The [Create bucket source](create_bucket.ts) reports a failed request without repeating it.

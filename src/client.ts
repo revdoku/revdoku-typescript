@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
-import { DefaultApi, ListEmailsRequest, ListMailboxesRequest, ListFilesRequest, GetMailboxRequest,
-  GetEmailRequest, GetEmailAttachmentDownloadRequest } from './apis/DefaultApi';
+import { DefaultApi, ListBucketsRequest, ListFilesRequest, GetBucketRequest, ListTicketsRequest, GetTicketRequest,
+  ListTicketMessagesRequest, GetTicketMessageRequest, GetTicketMessageAttachmentDownloadRequest } from './apis/DefaultApi';
 import { Configuration, ResponseError, RequestOpts, InitOverrideFunction } from './runtime';
-import { MailboxCreate } from './models/MailboxCreate';
+import { BucketCreate } from './models/BucketCreate';
+import { TicketReplyRequest } from './models/TicketReplyRequest';
 import { SaveUploadedFile201Response } from './models/SaveUploadedFile201Response';
 
 export interface RevdokuOptions {
@@ -116,50 +117,69 @@ export class Revdoku {
     return { ...input, accountId: input.accountId ?? this.accountId };
   }
 
-  listMailboxes(input: ListMailboxesRequest = {}, options: RequestOptions = {}) {
-    return this.api.listMailboxes(this.account(input), options);
+  listBuckets(input: ListBucketsRequest = {}, options: RequestOptions = {}) {
+    return this.api.listBuckets(this.account(input), options);
   }
 
-  getMailbox(input: GetMailboxRequest, options: RequestOptions = {}) {
-    return this.api.getMailbox(this.account(input), options);
+  getBucket(input: GetBucketRequest, options: RequestOptions = {}) {
+    return this.api.getBucket(this.account(input), options);
   }
 
-  createMailbox(input: Omit<MailboxCreate, 'email'> & {
+  /** Creates one bucket with its email address. After an uncertain result, list buckets before you create another. */
+  createBucket(input: Omit<BucketCreate, 'email'> & {
     username?: string; domain?: string; accountId?: string;
   } = {}, options: RequestOptions = {}) {
-    const { username, domain, accountId, ...mailbox } = input;
-    return this.api.createMailbox({ createMailboxRequest: {
+    const { username, domain, accountId, ...bucket } = input;
+    return this.api.createBucket({ createBucketRequest: {
       accountId: accountId ?? this.accountId,
-      mailbox: { ...mailbox, ...(username !== undefined || domain !== undefined ? { email: { username, domain } } : {}) }
+      bucket: { ...bucket, ...(username !== undefined || domain !== undefined ? { email: { username, domain } } : {}) }
     } }, options);
   }
 
-  listEmails(input: ListEmailsRequest, options: RequestOptions = {}) {
-    return this.api.listEmails(this.account(input), options);
+  /** Lists support tickets, newest activity first. Poll with `updatedAfter`. */
+  listTickets(input: ListTicketsRequest, options: RequestOptions = {}) {
+    return this.api.listTickets(this.account(input), options);
   }
 
-  getEmail(input: GetEmailRequest, options: RequestOptions = {}) {
-    return this.api.getEmail(this.account(input), options);
+  getTicket(input: GetTicketRequest, options: RequestOptions = {}) {
+    return this.api.getTicket(this.account(input), options);
+  }
+
+  /** Lists the messages of a ticket, oldest first. */
+  listTicketMessages(input: ListTicketMessagesRequest, options: RequestOptions = {}) {
+    return this.api.listTicketMessages(this.account(input), options);
+  }
+
+  getTicketMessage(input: GetTicketMessageRequest, options: RequestOptions = {}) {
+    return this.api.getTicketMessage(this.account(input), options);
+  }
+
+  /** Replies to the requester of a ticket. After an uncertain result, read the ticket before you reply again. */
+  replyToTicket(input: { bucketId: string; ticketId: string } & Omit<TicketReplyRequest, 'accountId'> & { accountId?: string },
+    options: RequestOptions = {}) {
+    const { bucketId, ticketId, accountId, ...reply } = input;
+    return this.api.replyToTicket({ bucketId, ticketId,
+      ticketReplyRequest: { ...reply, accountId: accountId ?? this.accountId } }, options);
   }
 
   listFiles(input: ListFilesRequest, options: RequestOptions = {}) {
     return this.api.listFiles(this.account(input), options);
   }
 
-  getAttachmentDownload(input: GetEmailAttachmentDownloadRequest, options: RequestOptions = {}) {
-    return this.api.getEmailAttachmentDownload(this.account(input), options);
+  getAttachmentDownload(input: GetTicketMessageAttachmentDownloadRequest, options: RequestOptions = {}) {
+    return this.api.getTicketMessageAttachmentDownload(this.account(input), options);
   }
 
   /**
    * Returns attachment bytes. Does not change shared read status or write local files.
    * `timeoutMs` applies to the API call and to the storage download.
    */
-  async downloadAttachment(input: GetEmailAttachmentDownloadRequest,
+  async downloadAttachment(input: GetTicketMessageAttachmentDownloadRequest,
     options: TransferOptions & { maxBytes?: number } = {}): Promise<Uint8Array> {
     const maxBytes = options.maxBytes ?? 64 * 1024 * 1024;
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw new Error('maxBytes must be a nonnegative safe integer');
     const { init, timeoutMs } = this.transfer(options);
-    const { data: { download } } = await this.api.getEmailAttachmentDownload(this.account(input), init);
+    const { data: { download } } = await this.api.getTicketMessageAttachmentDownload(this.account(input), init);
     if (download.sizeBytes != null && (!Number.isSafeInteger(download.sizeBytes) || download.sizeBytes < 0))
       throw new Error('Invalid attachment size in download metadata');
     if (download.sizeBytes != null && download.sizeBytes > maxBytes) throw new Error('Attachment exceeds maxBytes');
@@ -193,24 +213,24 @@ export class Revdoku {
   }
 
   /**
-   * Uploads bytes and commits a file version. Pass the mailbox version_id to protect concurrent edits.
+   * Uploads bytes and commits a file version. Pass the bucket version_id to protect concurrent edits.
    * `timeoutMs` applies to each API call and to the storage upload.
    */
-  async uploadFile(input: { mailboxId: string; path: string; content: Uint8Array | string;
-    contentType?: string; accountId?: string; expectedMailboxVersion?: string },
+  async uploadFile(input: { bucketId: string; path: string; content: Uint8Array | string;
+    contentType?: string; accountId?: string; expectedBucketVersion?: string },
     options: TransferOptions = {}): Promise<SaveUploadedFile201Response> {
     if (!input.path || input.path.startsWith('/') || input.path.includes('\\') ||
       input.path.split('/').some(part => !part || part === '..' || part === '.'))
-      throw new Error('path must be a mailbox-relative file path');
+      throw new Error('path must be a bucket-relative file path');
     if (typeof input.content !== 'string' && !(input.content instanceof Uint8Array))
       throw new TypeError('content must be a string or a Uint8Array');
     const { init, timeoutMs } = this.transfer(options);
     const bytes = typeof input.content === 'string' ? Buffer.from(input.content, 'utf8') : Buffer.from(input.content);
     const accountId = input.accountId ?? this.accountId;
-    const prepared = await this.api.prepareFileUpload({ prepareFileUploadRequest: {
-      mailboxId: input.mailboxId, accountId, path: input.path,
+    const prepared = await this.api.prepareFileUpload({ bucketId: input.bucketId, prepareFileUploadRequest: {
+      accountId, path: input.path,
       blob: { filename: input.path.split('/').pop()!, byteSize: bytes.length,
-        contentType: input.contentType || 'application/octet-stream', purpose: 'mailbox_file',
+        contentType: input.contentType || 'application/octet-stream', purpose: 'bucket_file',
         checksum: createHash('md5').update(bytes).digest('base64'), sha256: createHash('sha256').update(bytes).digest('hex') }
     } }, init);
     if (prepared.data.skipped && prepared.data.duplicate && prepared.data.file && prepared.data.version) {
@@ -225,9 +245,9 @@ export class Revdoku {
       body: new Uint8Array(bytes).buffer, redirect: 'error', credentials: 'omit', signal: this.signal(options.signal, timeoutMs) });
     await response.body?.cancel();
     if (!response.ok) throw new Error(`Storage upload failed: HTTP ${response.status}`);
-    return this.api.saveUploadedFile({ mailboxId: input.mailboxId, saveUploadedFileRequest: {
+    return this.api.saveUploadedFile({ bucketId: input.bucketId, saveUploadedFileRequest: {
       accountId, path: input.path, signedBlobId: prepared.data.signedId,
-      expectedMailboxVersion: input.expectedMailboxVersion
+      expectedBucketVersion: input.expectedBucketVersion
     } }, init);
   }
 }
