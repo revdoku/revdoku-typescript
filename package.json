@@ -1,6 +1,6 @@
 {
   "name": "revdoku",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Revdoku API client for Node.js: publish docs sites for people and AI agents, with a support mailbox and file storage.",
   "author": "Revdoku",
   "repository": {

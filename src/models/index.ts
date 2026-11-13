@@ -38,6 +38,7 @@ export * from './BucketAnalyticsSources';
 export * from './BucketAnalyticsSourcesAiAgents';
 export * from './BucketAnalyticsSourcesAiAgentsActivityInner';
 export * from './BucketAnalyticsSourcesAiAgentsAgentsInner';
+export * from './BucketAnalyticsSourcesAiAgentsCountriesInner';
 export * from './BucketAnalyticsSourcesAiAgentsSearchesInner';
 export * from './BucketAnalyticsSourcesBots';
 export * from './BucketAnalyticsSourcesHumans';
