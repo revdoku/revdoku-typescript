@@ -34,7 +34,6 @@ const { data } = await client.listBuckets();
 - `client.listFiles({ bucketId, ...filters })`: List files.
 - `client.getAttachmentDownload({ bucketId, ticketId, messageId, attachmentId })`: Get a temporary download link for an attachment.
 - `client.downloadAttachment({ bucketId, ticketId, messageId, attachmentId }, { maxBytes?, timeoutMs? })`: Download attachment bytes as a Uint8Array.
-- `client.uploadFile({ bucketId, path, content, contentType?, expectedBucketVersion? }, { timeoutMs? })`: Upload bytes or text and save a file version. `timeoutMs` also limits the storage transfer.
 
 ## Authentication
 
@@ -150,7 +149,7 @@ Parameters: `accountId` (string), `reason` (string or null), `status` (string: `
 
 `client.createBucket({ username, domain, title })`. Full API: `client.api.createBucket({ createBucketRequest })`.
 
-Waits until the address can receive email. On revdokumail.com, email.username is the bucket's name, with no suffix: lowercase letters, digits and single hyphens, 3 to 63 characters, also the name of its site. A name that another bucket uses as an address or a site address, or that another account used, returns EMAIL_ALREADY_EXISTS; your account can use its own earlier names again. Without email.username the address takes the title's name when it is free, else two readable words. A custom domain takes the exact name. If confirmation does not finish, EMAIL_NOT_READY returns the created bucket_id in error.details: read that bucket instead of creating another. The title defaults to email.username; a title that another active bucket uses returns 409 BUCKET_TITLE_TAKEN. With bucket.template, the bucket starts with the files of that template; if they cannot be added, TEMPLATE_IMPORT_FAILED returns the created bucket_id in error.details: add the files to that bucket instead of creating another. Never retry a creation automatically.
+Waits until the address can receive email. On revdokumail.com, email.username is the bucket's name, with no suffix: lowercase letters, digits and single hyphens, 3 to 63 characters, also the name of its site. A name that another bucket uses as an address or a site address, or that another account used, returns EMAIL_ALREADY_EXISTS; your account can use its own earlier names again. Without email.username the address takes the title's name when it is free, else two readable words. A custom domain takes the exact name. If confirmation does not finish, EMAIL_NOT_READY returns the created bucket_id in error.details: read that bucket instead of creating another. The title defaults to email.username; a title that another active bucket uses returns 409 BUCKET_TITLE_TAKEN. Its files come from a GitHub repository: connect one with the GitHub operations. Never retry a creation automatically.
 
 Body `createBucketRequest` (`CreateBucketRequest`): `bucket` (BucketCreate), `accountId` (string), `reason` (string or null).
 
@@ -212,30 +211,6 @@ Parameters: `bucketId` (string, required).
 
 Body `actionRequest` (`ActionRequest`): `accountId` (string), `reason` (string or null).
 
-### Lock a bucket or some of its files
-
-`POST /v1/buckets/{bucket_id}/lock` · [web reference](https://docs.revdoku.com/api-reference/buckets#lock-a-bucket-or-some-of-its-files)
-
-`client.api.lockBucket({ bucketId, lockRequest })`
-
-Tells other people and agents to wait while you edit. Without paths it locks the whole bucket and requires bucket-admin permission; with paths it locks those files and requires write permission. Others get 423 BUCKET_LOCKED or FILE_LOCKED until you unlock or the lock expires. A lock of someone else also returns 423. Locks never block incoming email. A batch upload (upload_sessions) locks the bucket by itself until it finishes. The MCP tool bucket_lock has the same contract.
-
-Parameters: `bucketId` (string, required).
-
-Body `lockRequest` (`LockRequest`): `message` (string, required), `paths` (array of string), `durationSeconds` (integer), `accountId` (string), `reason` (string or null).
-
-### Remove your lock
-
-`POST /v1/buckets/{bucket_id}/unlock` · [web reference](https://docs.revdoku.com/api-reference/buckets#remove-your-lock)
-
-`client.api.unlockBucket({ bucketId, unlockRequest })`
-
-Removes your lock of the whole bucket (bucket-admin permission) or of the listed files (write permission). A lock of someone else, a running batch upload or a deletion returns 423 BUCKET_LOCKED or FILE_LOCKED. Unlocking an unlocked bucket returns its lock state.
-
-Parameters: `bucketId` (string, required).
-
-Body `unlockRequest` (`UnlockRequest`): `paths` (array of string), `accountId` (string), `reason` (string or null).
-
 ## Files
 
 ### List files
@@ -244,21 +219,33 @@ Body `unlockRequest` (`UnlockRequest`): `paths` (array of string), `accountId` (
 
 `client.listFiles({ bucketId })`. Full API: `client.api.listFiles({ bucketId })`.
 
-Lists current files, including stored emails under _mailbox/. Listing never marks files read.
+Lists current files with their real paths: _repo/ holds the read-only copy of the GitHub repository, and _kb/ holds the knowledge base (_kb/public/ and _kb/private/). Listing never marks files read.
 
 Parameters: `bucketId` (string, required), `accountId` (string), `reason` (string or null), `q` (string), `folder` (string), `limit` (integer), `cursor` (string).
 
-### Save an uploaded file (step 3 of 3)
+### Write a knowledge base file
 
-`POST /v1/buckets/{bucket_id}/files` · [web reference](https://docs.revdoku.com/api-reference/files#save-an-uploaded-file-step-3-of-3)
+`POST /v1/buckets/{bucket_id}/files` · [web reference](https://docs.revdoku.com/api-reference/files#write-a-knowledge-base-file)
 
-`client.uploadFile({ bucketId, path, content })` (runs all three upload steps). Full API: `client.api.saveUploadedFile({ bucketId, saveUploadedFileRequest })`.
+`client.api.writeFile({ bucketId, fileWriteRequest })`
 
-Saves the uploaded blob at path. An existing path gets a new version.
+Requires bucket write permission. The knowledge base is the bucket folder _kb/: _kb/public/ is published with the site, and _kb/private/ is never published. Every other file of a bucket is read-only: the files of _repo/ change on GitHub. Send one of content (a page), content_base64 (a small image) or signed_blob_id (an uploaded image). A file at the path gets a new version. A file in _kb/public/ needs publish permission; without it the answer is 403 KB_PUBLISH_PERMISSION_REQUIRED. A write never publishes: the site shows a public file after the next publish. Another path returns 422 KB_PATH_REQUIRED, SYNCED_COPY_READ_ONLY or RESERVED_PATH, and another file type 422 KB_FILE_TYPE_UNSUPPORTED. A page of _kb/public/ with the front matter line do_not_publish: true stays off the site, and the site's AI Support Agent still answers visitors from it: put only facts that visitors may know there, never secrets. A file above the account's file size limit returns 413 FILE_TOO_LARGE. A locked bucket or file returns 423 BUCKET_LOCKED or FILE_LOCKED.
 
 Parameters: `bucketId` (string, required).
 
-Body `saveUploadedFileRequest` (`SaveUploadedFileRequest`): `path` (string, required), `signedBlobId` (string, required), `name` (string), `role` (string: `source`, `reference`, `generated`, `agent_output`, `export`, `artifact`), `existingFilePolicy` (string: `replace`, `skip`), `expectedBucketVersion` (string), `accountId` (string), `reason` (string or null).
+Body `fileWriteRequest` (`FileWriteRequest`): `path` (string, required), `content` (string), `contentBase64` (string), `signedBlobId` (string), `expectedBucketVersion` (string), `reason` (string or null), `accountId` (string).
+
+### Get an upload link for an image
+
+`POST /v1/buckets/{bucket_id}/uploads` · [web reference](https://docs.revdoku.com/api-reference/files#get-an-upload-link-for-an-image)
+
+`client.api.createFileUpload({ bucketId, fileUploadRequest })`
+
+Requires bucket write permission. For an image of the knowledge base that is larger than 256 KB, or for a client that sends files itself. Send the bytes with PUT to upload.url with upload.headers, then call POST /files with path and signed_blob_id. The link works for one hour. The size limit is the account's file size limit. A path outside _kb/ or another file type returns 422 KB_PATH_REQUIRED or KB_FILE_TYPE_UNSUPPORTED, and a file above the limit 413 FILE_TOO_LARGE.
+
+Parameters: `bucketId` (string, required).
+
+Body `fileUploadRequest` (`FileUploadRequest`): `path` (string, required), `byteSize` (integer, required), `checksum` (string, required), `sha256` (string, required), `accountId` (string), `reason` (string or null).
 
 ### Find a file by path
 
@@ -270,18 +257,6 @@ Returns file metadata only. Read content with the download endpoint. The disposi
 
 Parameters: `bucketId` (string, required), `path` (string, required), `accountId` (string), `reason` (string or null).
 
-### Append text to a file
-
-`POST /v1/buckets/{bucket_id}/files/append_text` · [web reference](https://docs.revdoku.com/api-reference/files#append-text-to-a-file)
-
-`client.api.appendText({ bucketId, appendTextRequest })`
-
-Appends UTF-8 text to an existing text file and creates a new version. A missing file returns BUCKET_FILE_NOT_FOUND.
-
-Parameters: `bucketId` (string, required).
-
-Body `appendTextRequest` (`AppendTextRequest`): `path` (string, required), `content` (string, required), `newlineBefore` (boolean), `expectedBucketVersion` (string), `accountId` (string), `reason` (string or null).
-
 ### Read file metadata
 
 `GET /v1/buckets/{bucket_id}/files/{file_id}` · [web reference](https://docs.revdoku.com/api-reference/files#read-file-metadata)
@@ -292,13 +267,13 @@ Reading metadata never marks the file read.
 
 Parameters: `bucketId` (string, required), `fileId` (string, required), `accountId` (string), `reason` (string or null).
 
-### Delete a file
+### Delete a knowledge base file
 
-`DELETE /v1/buckets/{bucket_id}/files/{file_id}` · [web reference](https://docs.revdoku.com/api-reference/files#delete-a-file)
+`DELETE /v1/buckets/{bucket_id}/files/{file_id}` · [web reference](https://docs.revdoku.com/api-reference/files#delete-a-knowledge-base-file)
 
 `client.api.deleteFile({ bucketId, fileId })`
 
-Requires bucket-admin permission. Files under _mailbox/ return MAILBOX_PATH_READ_ONLY; delete the ticket message instead. Files under _agents/ and _revdoku/ return RESERVED_PATH.
+Requires bucket write permission, and publish permission for a file in _kb/public/. Deletes one file of the knowledge base. Its versions stay: keep the file ID of the answer, list the versions with GET /files/{file_id}/versions and restore one to bring the file back. A path outside _kb/ returns 422 KB_PATH_REQUIRED, SYNCED_COPY_READ_ONLY or RESERVED_PATH. A locked bucket or file returns 423 BUCKET_LOCKED or FILE_LOCKED.
 
 Parameters: `bucketId` (string, required), `fileId` (string, required), `accountId` (string), `reason` (string or null).
 
@@ -312,42 +287,6 @@ Returns a temporary link and marks this version read. Send version_id for an old
 
 Parameters: `bucketId` (string, required), `fileId` (string, required), `versionId` (string), `accountId` (string), `reason` (string or null).
 
-### Rename or move a file in the same bucket
-
-`POST /v1/buckets/{bucket_id}/files/{file_id}/rename` · [web reference](https://docs.revdoku.com/api-reference/files#rename-or-move-a-file-in-the-same-bucket)
-
-`client.api.renameFile({ bucketId, fileId, renameFileRequest })`
-
-Changes the path without uploading the content again.
-
-Parameters: `bucketId` (string, required), `fileId` (string, required).
-
-Body `renameFileRequest` (`RenameFileRequest`): `newPath` (string, required), `accountId` (string), `reason` (string or null).
-
-### Move a file
-
-`POST /v1/buckets/{bucket_id}/files/{file_id}/move` · [web reference](https://docs.revdoku.com/api-reference/files#move-a-file)
-
-`client.api.moveFile({ bucketId, fileId, moveFileRequest })`
-
-Works in the same bucket or into target_bucket_id. Content is not uploaded again. Send target_path for an exact path or target_folder to keep the name.
-
-Parameters: `bucketId` (string, required), `fileId` (string, required).
-
-Body `moveFileRequest` (`MoveFileRequest`): `targetBucketId` (string), `targetPath` (string), `targetFolder` (string), `accountId` (string), `reason` (string or null).
-
-### Copy a file
-
-`POST /v1/buckets/{bucket_id}/files/{file_id}/copy` · [web reference](https://docs.revdoku.com/api-reference/files#copy-a-file)
-
-`client.api.copyFile({ bucketId, fileId, moveFileRequest })`
-
-Works in the same bucket or into target_bucket_id. Content is not uploaded again. Send target_path for an exact path or target_folder to keep the name.
-
-Parameters: `bucketId` (string, required), `fileId` (string, required).
-
-Body `moveFileRequest` (`MoveFileRequest`): `targetBucketId` (string), `targetPath` (string), `targetFolder` (string), `accountId` (string), `reason` (string or null).
-
 ### List file versions
 
 `GET /v1/buckets/{bucket_id}/files/{file_id}/versions` · [web reference](https://docs.revdoku.com/api-reference/files#list-file-versions)
@@ -358,77 +297,29 @@ Newest first.
 
 Parameters: `bucketId` (string, required), `fileId` (string, required), `accountId` (string), `reason` (string or null), `limit` (integer), `cursor` (string).
 
+### Move or rename a knowledge base file
+
+`POST /v1/buckets/{bucket_id}/files/{file_id}/move` · [web reference](https://docs.revdoku.com/api-reference/files#move-or-rename-a-knowledge-base-file)
+
+`client.api.moveFile({ bucketId, fileId, fileMoveRequest })`
+
+Requires bucket write permission. Moves one file inside the knowledge base to new_path: a new name (a rename), another folder, or from _kb/private/ to _kb/public/ and back. A move to or from _kb/public/ needs publish permission (403 KB_PUBLISH_PERMISSION_REQUIRED). The file keeps its ID and its versions. A file at the new path returns 409 BUCKET_FILE_PATH_EXISTS. The site changes after the next publish. A path outside _kb/ returns 422 KB_PATH_REQUIRED, SYNCED_COPY_READ_ONLY or RESERVED_PATH. A locked bucket or file returns 423 BUCKET_LOCKED or FILE_LOCKED.
+
+Parameters: `bucketId` (string, required), `fileId` (string, required).
+
+Body `fileMoveRequest` (`FileMoveRequest`): `newPath` (string, required), `reason` (string or null), `accountId` (string).
+
 ### Restore a file version
 
 `POST /v1/buckets/{bucket_id}/files/{file_id}/versions/{version_id}/restore` · [web reference](https://docs.revdoku.com/api-reference/files#restore-a-file-version)
 
-`client.api.restoreFileVersion({ bucketId, fileId, versionId, actionRequest })`
+`client.api.restoreFileVersion({ bucketId, fileId, versionId })`
 
-Creates a new current version with the content of the selected version. History is kept. Requires a plan with version restore.
+Requires bucket write permission, and publish permission for a file in _kb/public/. Makes an earlier version of a knowledge base file the current one, as a new version. A deleted file comes back with it: use the file ID that the delete returned. When another file took its path meanwhile, the answer is 409 BUCKET_FILE_PATH_EXISTS. The current version returns 422 FILE_VERSION_ALREADY_CURRENT. A path outside _kb/ returns 422 KB_PATH_REQUIRED, SYNCED_COPY_READ_ONLY or RESERVED_PATH. A locked bucket or file returns 423 BUCKET_LOCKED or FILE_LOCKED.
 
 Parameters: `bucketId` (string, required), `fileId` (string, required), `versionId` (string, required).
 
-Body `actionRequest` (`ActionRequest`): `accountId` (string), `reason` (string or null).
-
-### Prepare a file upload (step 1 of 3)
-
-`POST /v1/buckets/{bucket_id}/uploads` · [web reference](https://docs.revdoku.com/api-reference/files#prepare-a-file-upload-step-1-of-3)
-
-`client.uploadFile({ bucketId, path, content })` (runs all three upload steps). Full API: `client.api.prepareFileUpload({ bucketId, prepareFileUploadRequest })`.
-
-Returns a storage URL. Then PUT the bytes to direct_upload.url with exactly direct_upload.headers and no API key (step 2), and save the file with POST /v1/buckets/{bucket_id}/files (step 3). Identical content at the same path returns skipped=true and duplicate=true without an upload.
-
-Parameters: `bucketId` (string, required).
-
-Body `prepareFileUploadRequest` (`PrepareFileUploadRequest`): `path` (string, required), `existingFilePolicy` (string: `replace`, `skip`), `blob` (UploadBlob, required), `accountId` (string), `reason` (string or null).
-
-### Start a batch upload
-
-`POST /v1/buckets/{bucket_id}/upload_sessions` · [web reference](https://docs.revdoku.com/api-reference/files#start-a-batch-upload)
-
-`client.api.createUploadSession({ bucketId, createUploadSessionRequest })`
-
-Starts an upload session for many files and returns storage targets for the first files. The session locks the bucket for other writers; incoming email still arrives. Send files in batches with POST .../uploads, PUT the bytes to each upload.url, save each batch with POST .../finalize_batch, then call POST .../finalize. Unsaved uploads are discarded when the session expires.
-
-Parameters: `bucketId` (string, required).
-
-Body `createUploadSessionRequest` (`CreateUploadSessionRequest`): `files` (array of UploadSessionFile), `expectedFileCount` (integer), `clientSessionKey` (string), `existingFilePolicy` (string: `replace`, `skip`), `expectedBucketVersion` (string), `accountId` (string), `reason` (string or null).
-
-### Get storage targets for a batch
-
-`POST /v1/buckets/{bucket_id}/upload_sessions/{session_id}/uploads` · [web reference](https://docs.revdoku.com/api-reference/files#get-storage-targets-for-a-batch)
-
-`client.api.addUploadSessionFiles({ bucketId, sessionId, addUploadSessionFilesRequest })`
-
-Returns upload.url and upload.headers for each file that needs bytes. Repeating a path returns a fresh target, for example after a failed PUT. Files with identical content are skipped.
-
-Parameters: `bucketId` (string, required), `sessionId` (string, required).
-
-Body `addUploadSessionFilesRequest` (`AddUploadSessionFilesRequest`): `files` (array of UploadSessionFile, required), `accountId` (string), `reason` (string or null).
-
-### Save uploaded files
-
-`POST /v1/buckets/{bucket_id}/upload_sessions/{session_id}/finalize_batch` · [web reference](https://docs.revdoku.com/api-reference/files#save-uploaded-files)
-
-`client.api.saveUploadSessionBatch({ bucketId, sessionId })`
-
-Saves up to limit files whose bytes were uploaded. Call it after each batch to keep each request short. DIRECT_UPLOAD_NOT_FOUND names a file whose bytes are missing in error.details.path; upload it again and retry.
-
-Parameters: `bucketId` (string, required), `sessionId` (string, required).
-
-Body `saveUploadSessionBatchRequest` (`SaveUploadSessionBatchRequest`, optional): `limit` (integer), `accountId` (string), `reason` (string or null).
-
-### Finish or cancel a batch upload
-
-`POST /v1/buckets/{bucket_id}/upload_sessions/{session_id}/finalize` · [web reference](https://docs.revdoku.com/api-reference/files#finish-or-cancel-a-batch-upload)
-
-`client.api.finalizeUploadSession({ bucketId, sessionId })`
-
-complete=true saves the remaining uploaded files, creates one bucket version and releases the lock. A 202 response with finalize_pending=true means more files remain: call finalize again after Retry-After. complete=false cancels the session and discards its unsaved files. Finalizing a finished session returns it unchanged.
-
-Parameters: `bucketId` (string, required), `sessionId` (string, required).
-
-Body `finalizeUploadSessionRequest` (`FinalizeUploadSessionRequest`, optional): `complete` (boolean), `accountId` (string), `reason` (string or null).
+Body `actionRequest` (`ActionRequest`, optional): `accountId` (string), `reason` (string or null).
 
 ## GitHub
 
@@ -468,7 +359,7 @@ Parameters: `bucketId` (string, required), `accountId` (string).
 
 `client.api.connectGithubRepository({ bucketId, connectGithubRepositoryRequest })`
 
-Makes the bucket's files a copy of one branch of a repository, or of one folder of it. The first sync copies the files, and each later push to the branch updates them. A bucket that has files needs bucket_files: replace (the repository's files replace them) or copy (they become the first commit of an empty repository); its email and agent folders stay. After the first sync GitHub is the source. Needs an account owner or administrator key with admin access to all buckets. A connected GitHub account must read the repository: 403 GITHUB_APP_NOT_INSTALLED gives the links for the person in error.details.
+Makes the bucket's files a read-only copy of one branch of a repository, or of one folder of it. The first sync copies the files, and each later push to the branch updates them. Revdoku never writes to the repository. The copy is in the bucket folder _repo/. A bucket that has files there needs bucket_files: replace (the repository's files replace them); its knowledge base (_kb/), its tickets and its agent folders stay. GitHub is the source: change the files there. Needs an account owner or administrator key with admin access to all buckets. A connected GitHub account must read the repository: 403 GITHUB_APP_NOT_INSTALLED gives the links for the person in error.details.
 
 Parameters: `bucketId` (string, required).
 
@@ -480,7 +371,7 @@ Body `connectGithubRepositoryRequest` (`ConnectGithubRepositoryRequest`): `githu
 
 `client.api.updateGithubSync({ bucketId, updateGithubSyncRequest })`
 
-Sets auto_publish and the mode of edits made in Revdoku: push_revdoku_edits false makes the files a read-only copy, auto_commit true commits edits to the branch at each sync, and auto_commit false keeps them in pending_changes until a person publishes them in the dashboard. Needs an account owner or administrator key with admin access to all buckets.
+Sets auto_publish: whether the site publishes again after each sync. Needs an account owner or administrator key with admin access to all buckets.
 
 Parameters: `bucketId` (string, required).
 
@@ -604,7 +495,7 @@ Parameters: `bucketId` (string, required), `period` (string (enum, see OpenAPI))
 
 Lists the bucket's support tickets, newest activity first. A ticket is one conversation that someone started: an email or a message left on the docs site. The channel feedback is for tickets from earlier page feedback emails; new page feedback comments show in the dashboard only. Tickets whose first message AI labels marked as Junk are left out unless label is Junk. To poll, pass the newest updated_at you have seen as updated_after. Reads no message content.
 
-Parameters: `bucketId` (string, required), `accountId` (string), `reason` (string or null), `limit` (integer), `cursor` (string), `status` (string: `open`, `solved`, `all`), `channel` (string: `email`, `chat`, `feedback`), `label` (string), `updatedAfter` (string (date-time)).
+Parameters: `bucketId` (string, required), `accountId` (string), `reason` (string or null), `limit` (integer), `cursor` (string), `status` (string: `open`, `pending`, `solved`, `all`), `channel` (string: `email`, `chat`, `feedback`), `label` (string), `updatedAfter` (string (date-time)).
 
 ### Read a ticket
 
@@ -616,17 +507,17 @@ Returns the ticket without its messages. List them with GET /v1/buckets/{bucket_
 
 Parameters: `bucketId` (string, required), `ticketId` (string, required), `accountId` (string), `reason` (string or null).
 
-### Solve, reopen or label a ticket
+### Change a ticket: status, internal note or labels
 
-`PATCH /v1/buckets/{bucket_id}/tickets/{ticket_id}` · [web reference](https://docs.revdoku.com/api-reference/tickets#solve-reopen-or-label-a-ticket)
+`PATCH /v1/buckets/{bucket_id}/tickets/{ticket_id}` · [web reference](https://docs.revdoku.com/api-reference/tickets#change-a-ticket-status-internal-note-or-labels)
 
 `client.api.updateTicket({ bucketId, ticketId, ticketUpdateRequest })`
 
-Requires bucket write permission. status solved or open changes every ticket of a merged conversation. add_labels labels the first message; remove_labels removes the labels from every message. Built-in labels such as Junk change only in the dashboard. While an agent works on a message, a label change returns 423 EMAIL_LOCKED.
+Requires bucket write permission. status is open, pending (it waits for the requester) or solved; it changes every ticket of a merged conversation. internal_note sets the team's note on the ticket: it is never sent to the requester, and a change of it is no activity of the ticket. add_labels labels the first message; remove_labels removes the labels from every message. Built-in labels such as Junk change only in the dashboard. While an agent works on a message, a label change returns 423 EMAIL_LOCKED.
 
 Parameters: `bucketId` (string, required), `ticketId` (string, required).
 
-Body `ticketUpdateRequest` (`TicketUpdateRequest`): `status` (string: `open`, `solved`), `addLabels` (array of string), `removeLabels` (array of string), `accountId` (string), `reason` (string or null).
+Body `ticketUpdateRequest` (`TicketUpdateRequest`): `status` (string: `open`, `pending`, `solved`), `internalNote` (string or null), `addLabels` (array of string), `removeLabels` (array of string), `accountId` (string), `reason` (string or null).
 
 ### List the messages of a ticket
 
@@ -636,7 +527,7 @@ Body `ticketUpdateRequest` (`TicketUpdateRequest`): `status` (string: `open`, `s
 
 Lists the ticket's messages oldest first, with body_text and attachment metadata. Does not change read status. Junk email and new email that AI labels still check are withheld: body_status is withheld.
 
-Parameters: `bucketId` (string, required), `ticketId` (string, required), `accountId` (string), `reason` (string or null), `limit` (integer), `cursor` (string), `includeStorage` (boolean).
+Parameters: `bucketId` (string, required), `ticketId` (string, required), `accountId` (string), `reason` (string or null), `limit` (integer), `cursor` (string).
 
 ### Reply to the requester
 
@@ -658,7 +549,7 @@ Body `ticketReplyRequest` (`TicketReplyRequest`): `subject` (string), `text` (st
 
 Returns one message with body_text and attachment metadata. Does not change read status. A new email that AI labels still check returns 503 EMAIL_LABELING_PENDING with Retry-After.
 
-Parameters: `bucketId` (string, required), `ticketId` (string, required), `messageId` (string, required), `accountId` (string), `reason` (string or null), `includeStorage` (boolean).
+Parameters: `bucketId` (string, required), `ticketId` (string, required), `messageId` (string, required), `accountId` (string), `reason` (string or null).
 
 ### Delete a message
 

@@ -1,10 +1,8 @@
-import { createHash } from 'node:crypto';
 import { DefaultApi, ListBucketsRequest, ListFilesRequest, GetBucketRequest, ListTicketsRequest, GetTicketRequest,
   ListTicketMessagesRequest, GetTicketMessageRequest, GetTicketMessageAttachmentDownloadRequest } from './apis/DefaultApi';
 import { Configuration, ResponseError, RequestOpts, InitOverrideFunction } from './runtime';
 import { BucketCreate } from './models/BucketCreate';
 import { TicketReplyRequest } from './models/TicketReplyRequest';
-import { SaveUploadedFile201Response } from './models/SaveUploadedFile201Response';
 
 export interface RevdokuOptions {
   /** API key. Defaults to the REVDOKU_API_KEY environment variable. */
@@ -18,7 +16,7 @@ export interface RevdokuOptions {
 
 export interface RequestOptions { signal?: AbortSignal }
 
-/** Options of the calls that transfer file bytes to or from storage. */
+/** Options of the calls that download bytes from storage. */
 export interface TransferOptions extends RequestOptions {
   /** Timeout for each request of this call, including the storage transfer. Default: the client `timeoutMs`. */
   timeoutMs?: number;
@@ -210,44 +208,5 @@ export class Revdoku {
     let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
     return bytes;
-  }
-
-  /**
-   * Uploads bytes and commits a file version. Pass the bucket version_id to protect concurrent edits.
-   * `timeoutMs` applies to each API call and to the storage upload.
-   */
-  async uploadFile(input: { bucketId: string; path: string; content: Uint8Array | string;
-    contentType?: string; accountId?: string; expectedBucketVersion?: string },
-    options: TransferOptions = {}): Promise<SaveUploadedFile201Response> {
-    if (!input.path || input.path.startsWith('/') || input.path.includes('\\') ||
-      input.path.split('/').some(part => !part || part === '..' || part === '.'))
-      throw new Error('path must be a bucket-relative file path');
-    if (typeof input.content !== 'string' && !(input.content instanceof Uint8Array))
-      throw new TypeError('content must be a string or a Uint8Array');
-    const { init, timeoutMs } = this.transfer(options);
-    const bytes = typeof input.content === 'string' ? Buffer.from(input.content, 'utf8') : Buffer.from(input.content);
-    const accountId = input.accountId ?? this.accountId;
-    const prepared = await this.api.prepareFileUpload({ bucketId: input.bucketId, prepareFileUploadRequest: {
-      accountId, path: input.path,
-      blob: { filename: input.path.split('/').pop()!, byteSize: bytes.length,
-        contentType: input.contentType || 'application/octet-stream', purpose: 'bucket_file',
-        checksum: createHash('md5').update(bytes).digest('base64'), sha256: createHash('sha256').update(bytes).digest('hex') }
-    } }, init);
-    if (prepared.data.skipped && prepared.data.duplicate && prepared.data.file && prepared.data.version) {
-      return { success: true, data: { file: prepared.data.file, version: prepared.data.version,
-        created: false, duplicate: true } };
-    }
-    const upload = prepared.data.directUpload;
-    if (!upload || !prepared.data.signedId) throw new Error('Upload preparation did not return a storage destination');
-    const headers = new Headers(upload.headers);
-    if (headers.has('authorization') || headers.has('cookie')) throw new Error('Unexpected credentials in storage upload headers');
-    const response = await fetch(this.storageUrl(upload.url), { method: 'PUT', headers,
-      body: new Uint8Array(bytes).buffer, redirect: 'error', credentials: 'omit', signal: this.signal(options.signal, timeoutMs) });
-    await response.body?.cancel();
-    if (!response.ok) throw new Error(`Storage upload failed: HTTP ${response.status}`);
-    return this.api.saveUploadedFile({ bucketId: input.bucketId, saveUploadedFileRequest: {
-      accountId, path: input.path, signedBlobId: prepared.data.signedId,
-      expectedBucketVersion: input.expectedBucketVersion
-    } }, init);
   }
 }
