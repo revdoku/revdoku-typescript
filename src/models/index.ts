@@ -158,6 +158,7 @@ export * from './PreviewBucket202Response';
 export * from './PreviewBucket202ResponseData';
 export * from './PreviewRequest';
 export * from './Publication';
+export * from './PublicationSupport';
 export * from './PublishBucket202Response';
 export * from './PublishBucket202ResponseData';
 export * from './PublishBucket202ResponseDataPlanNotice';
