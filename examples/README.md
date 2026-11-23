@@ -4,8 +4,8 @@ These examples run the SDK from this repository. To use the SDK in your own
 application, install it from the package registry instead: see
 [Use the SDK in your application](#use-the-sdk-in-your-application).
 
-A **bucket** has its own email address and the files of its docs site. Each conversation
-that arrives there is a support ticket. Keep the bucket's `bkt_...` ID for later requests. Run the examples on your computer or backend,
+A **project** has its own email address and the files of its docs site. Each conversation
+that arrives there is a support ticket. Keep the project's `prj_...` ID for later requests. Run the examples on your computer or backend,
 and keep the API key there.
 
 ## Build the examples
@@ -34,15 +34,15 @@ Run only the command for your current step, from the repository directory:
 
 | Step | Command | Source |
 | --- | --- | --- |
-| List buckets | `node examples/dist/list_buckets.js` | [Source](list_buckets.ts) |
-| Create bucket | `node examples/dist/create_bucket.js` | [Source](create_bucket.ts) |
+| List projects | `node examples/dist/list_projects.js` | [Source](list_projects.ts) |
+| Create project | `node examples/dist/create_project.js` | [Source](create_project.ts) |
 | Read tickets | `node examples/dist/read_tickets.js` | [Source](read_tickets.ts) |
 | Download attachment | `node examples/dist/download_attachment.js` | [Source](download_attachment.ts) |
 | List files | `node examples/dist/list_files.js` | [Source](list_files.ts) |
 
 ## Configure
 
-1. [Sign up](https://app.revdoku.com/users/sign_up) or sign in. The setup steps after signup create your first bucket.
+1. [Sign up](https://app.revdoku.com/users/sign_up) or sign in. The setup steps after signup create your first project.
 2. In the dashboard, select **Connect via API** and copy a new API key. You can also manage keys in [Account → Access](https://app.revdoku.com/account/access).
 3. Set the key in your environment. Keep real keys out of committed files.
 
@@ -54,27 +54,27 @@ Run only the command for your current step, from the repository directory:
 
 | Task | Access needed |
 | --- | --- |
-| List and read tickets, download attachments, list files | Read access to that bucket |
-| Reply to a ticket, solve it, change its labels | Write access to that bucket |
-| Create another bucket | Admin access to the account. A key for selected buckets cannot create buckets. |
-| Delete a message | Admin access to that bucket |
+| List and read tickets, download attachments, list files | Read access to that project |
+| Reply to a ticket, solve it, change its labels | Write access to that project |
+| Create another project | Admin access to the account. A key for selected projects cannot create projects. |
+| Delete a message | Admin access to that project |
 
 Requests go to `https://api.revdoku.com`. Every path starts with `/v1`, for
-example `https://api.revdoku.com/v1/buckets`. The SDK takes the origin without
+example `https://api.revdoku.com/v1/projects`. The SDK takes the origin without
 `/v1`. Keep its default.
 
 ## Receive and download
 
-1. **Choose a bucket.** Run **List buckets** and copy the `id` of a bucket. If you need a separate bucket and have admin access to the account, run **Create bucket** once. Both print a bucket ID and its address, for example:
+1. **Choose a project.** Run **List projects** and copy the `id` of a project. If you need a separate project and have admin access to the account, run **Create project** once. Both print a project ID and its address, for example:
 
    ```text
-   bkt_RETURNED_ID example@revdokumail.com
+   prj_RETURNED_ID example@revdokumail.com
    ```
 
    Save the ID:
 
    ```sh
-   export REVDOKU_BUCKET_ID="bkt_RETURNED_ID"
+   export REVDOKU_PROJECT_ID="prj_RETURNED_ID"
    ```
 
 2. **Send a test email** from your normal email app to that address. Use a subject such as `First API test` and attach a small text file.
@@ -87,7 +87,7 @@ example `https://api.revdoku.com/v1/buckets`. The SDK takes the origin without
    When the AI filter is on, it checks a new message for up to about one minute. The
    example waits for it, so the first run after delivery can take that long.
 
-   No output means that the bucket has no open tickets. Wait for delivery and run it again. Reading through this example does not change a ticket.
+   No output means that the project has no open tickets. Wait for delivery and run it again. Reading through this example does not change a ticket.
 4. **Download one attachment.** Copy the `ticket_id`, the message `id` and an `attachments[].id` from that output. Choose a local path that does not exist:
 
    ```sh
@@ -98,7 +98,7 @@ example `https://api.revdoku.com/v1/buckets`. The SDK takes the origin without
    ```
 
    Run **Download attachment**. It prints the saved path. The example never overwrites a file.
-5. **Run List files** to see the files in the bucket. They are a read-only copy of the bucket's GitHub repository.
+5. **Run List files** to see the files in the project. They are a read-only copy of the project's GitHub repository.
 
 ## Understand the results
 
@@ -118,20 +118,20 @@ key**. It keeps one attachment in memory. Links expire after 15 minutes.
 
 ## Handle failures
 
-The **Create bucket** example prints the error code and details, then exits. It never repeats the creation.
+The **Create project** example prints the error code and details, then exits. It never repeats the creation.
 
 | Failure | Next step |
 | --- | --- |
 | `401 UNAUTHORIZED` | Make sure that the API key is set and valid. |
-| `403 FORBIDDEN` | Check the account, buckets and permissions of the key. |
-| `404` for a bucket, ticket or message | Check the account and the IDs. The API also returns 404 for resources that the key cannot see. |
-| `503 EMAIL_NOT_READY` | The creation can have succeeded. Read the bucket in `error.details.bucket_id` before you do anything else. |
-| Timeout or lost creation response | List buckets before you create another one. |
+| `403 FORBIDDEN` | Check the account, projects and permissions of the key. |
+| `404` for a project, ticket or message | Check the account and the IDs. The API also returns 404 for resources that the key cannot see. |
+| `503 EMAIL_NOT_READY` | The creation can have succeeded. Read the project in `error.details.project_id` before you do anything else. |
+| Timeout or lost creation response | List projects before you create another one. |
 | `429` or `503` with `Retry-After`, such as `503 EMAIL_INDEX_BUILDING` | For reads, wait that many seconds, then try again a limited number of times. |
 | `503 EMAIL_LABELING_PENDING` | The AI filter is still checking a new message. **Read tickets** waits `Retry-After` seconds and reads it again, for up to about one minute. |
-| `BUCKET_CREATION_LIMIT_REACHED` | Wait until `error.details.resets_at`. An immediate retry cannot succeed. |
+| `PROJECT_CREATION_LIMIT_REACHED` | Wait until `error.details.resets_at`. An immediate retry cannot succeed. |
 
-Each successful creation uses creation capacity. Deleting the bucket does not
+Each successful creation uses creation capacity. Deleting the project does not
 give it back. See [Errors](https://docs.revdoku.com/api#errors).
 
 ## Run continuously
@@ -168,4 +168,4 @@ Use an ES module (`.mjs`, or a project with `"type": "module"`) or TypeScript. C
 
 SDK fields are camelCase: `result.data.message.bodyText`, `message.bodyStatus`, `page.pagination.hasMore`, `page.pagination.nextCursor`. The JSON API uses snake_case.
 
-For API errors, catch `RevdokuError` and read `status`, `code`, `details` and `retryAfter`. The [Create bucket source](create_bucket.ts) reports a failed request without repeating it.
+For API errors, catch `RevdokuError` and read `status`, `code`, `details` and `retryAfter`. The [Create project source](create_project.ts) reports a failed request without repeating it.

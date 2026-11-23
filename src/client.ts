@@ -1,7 +1,7 @@
-import { DefaultApi, ListBucketsRequest, ListFilesRequest, GetBucketRequest, ListTicketsRequest, GetTicketRequest,
+import { DefaultApi, ListProjectsRequest, ListFilesRequest, GetProjectRequest, ListTicketsRequest, GetTicketRequest,
   ListTicketMessagesRequest, GetTicketMessageRequest, GetTicketMessageAttachmentDownloadRequest } from './apis/DefaultApi';
 import { Configuration, ResponseError, RequestOpts, InitOverrideFunction } from './runtime';
-import { BucketCreate } from './models/BucketCreate';
+import { ProjectCreate } from './models/ProjectCreate';
 import { TicketReplyRequest } from './models/TicketReplyRequest';
 
 export interface RevdokuOptions {
@@ -115,22 +115,22 @@ export class Revdoku {
     return { ...input, accountId: input.accountId ?? this.accountId };
   }
 
-  listBuckets(input: ListBucketsRequest = {}, options: RequestOptions = {}) {
-    return this.api.listBuckets(this.account(input), options);
+  listProjects(input: ListProjectsRequest = {}, options: RequestOptions = {}) {
+    return this.api.listProjects(this.account(input), options);
   }
 
-  getBucket(input: GetBucketRequest, options: RequestOptions = {}) {
-    return this.api.getBucket(this.account(input), options);
+  getProject(input: GetProjectRequest, options: RequestOptions = {}) {
+    return this.api.getProject(this.account(input), options);
   }
 
-  /** Creates one bucket with its email address. After an uncertain result, list buckets before you create another. */
-  createBucket(input: Omit<BucketCreate, 'email'> & {
+  /** Creates one project with its email address. After an uncertain result, list projects before you create another. */
+  createProject(input: Omit<ProjectCreate, 'email'> & {
     username?: string; domain?: string; accountId?: string;
   } = {}, options: RequestOptions = {}) {
-    const { username, domain, accountId, ...bucket } = input;
-    return this.api.createBucket({ createBucketRequest: {
+    const { username, domain, accountId, ...project } = input;
+    return this.api.createProject({ createProjectRequest: {
       accountId: accountId ?? this.accountId,
-      bucket: { ...bucket, ...(username !== undefined || domain !== undefined ? { email: { username, domain } } : {}) }
+      project: { ...project, ...(username !== undefined || domain !== undefined ? { email: { username, domain } } : {}) }
     } }, options);
   }
 
@@ -153,10 +153,10 @@ export class Revdoku {
   }
 
   /** Replies to the requester of a ticket. After an uncertain result, read the ticket before you reply again. */
-  replyToTicket(input: { bucketId: string; ticketId: string } & Omit<TicketReplyRequest, 'accountId'> & { accountId?: string },
+  replyToTicket(input: { projectId: string; ticketId: string } & Omit<TicketReplyRequest, 'accountId'> & { accountId?: string },
     options: RequestOptions = {}) {
-    const { bucketId, ticketId, accountId, ...reply } = input;
-    return this.api.replyToTicket({ bucketId, ticketId,
+    const { projectId, ticketId, accountId, ...reply } = input;
+    return this.api.replyToTicket({ projectId, ticketId,
       ticketReplyRequest: { ...reply, accountId: accountId ?? this.accountId } }, options);
   }
 
