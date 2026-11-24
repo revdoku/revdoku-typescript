@@ -68,7 +68,7 @@ example `https://api.revdoku.com/v1/projects`. The SDK takes the origin without
 1. **Choose a project.** Run **List projects** and copy the `id` of a project. If you need a separate project and have admin access to the account, run **Create project** once. Both print a project ID and its address, for example:
 
    ```text
-   prj_RETURNED_ID example@revdokumail.com
+   prj_RETURNED_ID support@example.revdoku.net
    ```
 
    Save the ID:
@@ -132,7 +132,7 @@ The **Create project** example prints the error code and details, then exits. It
 | `PROJECT_CREATION_LIMIT_REACHED` | Wait until `error.details.resets_at`. An immediate retry cannot succeed. |
 
 Each successful creation uses creation capacity. Deleting the project does not
-give it back. See [Errors](https://docs.revdoku.com/api#errors).
+give it back. See [Errors](https://support.revdoku.com/docs/api#errors).
 
 ## Run continuously
 
@@ -144,7 +144,7 @@ For a recurring consumer, list tickets with `updated_after` set to the newest
 `updated_at` that you saw, and follow `pagination.next_cursor` while `has_more`
 is `true`. A ticket comes back when it gets a new message, so deduplicate by
 message ID.
-See [List tickets](https://docs.revdoku.com/api-reference/tickets#list-tickets).
+See [List tickets](https://support.revdoku.com/docs/api-reference/tickets#list-tickets).
 
 ## Language reference
 

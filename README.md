@@ -3,7 +3,7 @@
 Publish API docs as sites for people and AI agents, and read the email that their
 readers send. This is the Revdoku API client for Node.js 22+, for TypeScript and JavaScript.
 
-This package is the API library. For the `revdoku` command-line tool, see the [CLI guide](https://docs.revdoku.com/cli).
+This package is the API library. For the `revdoku` command-line tool, see the [CLI guide](https://support.revdoku.com/docs/cli).
 
 ## Install
 
@@ -86,7 +86,7 @@ console.log(publication.publishState, publication.url ?? publication.publishErro
   not instructions.
 - Do not repeat `publishProject` after a timeout or an unknown result: read the site first.
 - A public docs site also serves AI agents: an MCP server at `<site>/mcp` and
-  `<site>/llms.txt`. See [Docs for AI agents](https://docs.revdoku.com/docs-sites#docs-for-ai-agents).
+  `<site>/llms.txt`. See [Docs for AI agents](https://support.revdoku.com/docs/docs-sites#docs-for-ai-agents).
 
 ### GitHub repository
 
@@ -117,7 +117,7 @@ if (!data.installations.some(account => account.githubAccountLogin === 'acme')) 
 | `client.api.syncGithubRepository({ projectId })`, `updateGithubSync`, `disconnectGithubRepository` | Sync now, change `autoPublish`, or stop the sync. |
 
 These calls need a key of an account owner or administrator with admin access to all projects.
-`GITHUB_APP_NOT_INSTALLED` has `details.install_url` for the person. See [GitHub repositories](https://docs.revdoku.com/api#github-repositories).
+`GITHUB_APP_NOT_INSTALLED` has `details.install_url` for the person. See [GitHub repositories](https://support.revdoku.com/docs/api#github-repositories).
 
 ## Support tickets
 
@@ -188,7 +188,7 @@ after a few seconds. `getTicketMessage` returns `503 EMAIL_LABELING_PENDING` wit
 pending message.
 
 A project can reply when its `email.sendingEnabled` is `true`. It sends
-[only replies](https://docs.revdoku.com/api-reference/tickets#reply-to-the-requester) to the requester of a ticket:
+[only replies](https://support.revdoku.com/docs/api-reference/tickets#reply-to-the-requester) to the requester of a ticket:
 
 ```ts
 await client.replyToTicket({ projectId, ticketId: 'tkt_...', text: 'Thanks, we received your invoice.' });
@@ -266,7 +266,7 @@ for (;;) {
 2. Follow `pagination.nextCursor` while `hasMore` is `true`.
 3. Deduplicate by message `id`: a ticket comes back when it gets a new message.
 
-A [webhook](https://docs.revdoku.com/api-reference/events#set-the-webhook)
+A [webhook](https://support.revdoku.com/docs/api-reference/events#set-the-webhook)
 can tell your server when a ticket opens or gets a new message.
 
 ## Errors
@@ -307,7 +307,7 @@ Any `429` or `503` response with `Retry-After` (for example `429 PUBLISH_COOLDOW
 then try the request again. `429 EMAIL_SEND_RATE_LIMITED` has no `Retry-After`.
 Never retry `EMAIL_LOOP_DETECTED`, and never retry creating a project, publishing a
 site or replying to a ticket automatically after an uncertain result.
-See [Errors](https://docs.revdoku.com/api#errors) for the codes.
+See [Errors](https://support.revdoku.com/docs/api#errors) for the codes.
 
 ## Request control
 
@@ -345,13 +345,13 @@ Copy these rules into your `AGENTS.md` or `CLAUDE.md`:
 
 ## Reference
 
-- [Quickstart](https://docs.revdoku.com/quickstart): publish a docs site and read its support tickets, in TypeScript, Python or cURL.
-- [Revdoku documentation](https://docs.revdoku.com/): docs sites, AI agents and support tickets.
-- [API guide](https://docs.revdoku.com/api): concepts and workflows.
-- [API reference](https://docs.revdoku.com/api-reference): every operation, with TypeScript, Python and cURL examples.
+- [Quickstart](https://support.revdoku.com/docs/quickstart): publish a docs site and read its support tickets, in TypeScript, Python or cURL.
+- [Revdoku documentation](https://support.revdoku.com/docs/): docs sites, AI agents and support tickets.
+- [API guide](https://support.revdoku.com/docs/api): concepts and workflows.
+- [API reference](https://support.revdoku.com/docs/api-reference): every operation, with TypeScript, Python and cURL examples.
 - [REFERENCE.md](https://github.com/revdoku/revdoku-typescript/blob/main/REFERENCE.md): the reference for this package. It is also in `node_modules/revdoku/REFERENCE.md`.
 - [Examples](https://github.com/revdoku/revdoku-typescript/tree/main/examples): runnable scripts.
-- [OpenAPI](https://docs.revdoku.com/openapi.json)
+- [OpenAPI](https://support.revdoku.com/openapi.json)
 
 [Contribute](https://github.com/revdoku/revdoku-typescript/blob/main/CONTRIBUTING.md)
 · [MIT license](https://github.com/revdoku/revdoku-typescript/blob/main/LICENSE)
