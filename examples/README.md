@@ -81,7 +81,7 @@ example `https://api.revdoku.com/v1/projects`. The SDK takes the origin without
 3. **Run Read tickets.** It lists open tickets, follows every page and gets the text and attachment metadata of each received message. It skips messages with the Junk label. The output has fields like these (IDs and content differ):
 
    ```json
-   {"ticket_id":"tkt_RETURNED_ID","number":1,"channel":"email","id":"eml_RETURNED_ID","subject":"First API test","body_status":"complete","body_text":"Hello","attachments":[{"id":"df_RETURNED_ID","filename":"hello.txt"}]}
+   {"ticket_id":"tkt_RETURNED_ID","number":1,"channel":"email","id":"eml_RETURNED_ID","subject":"First API test","body_status":"complete","body_text":"Hello","attachments":[{"id":"eat_RETURNED_ID","name":"hello.txt","content_type":"text/plain","size_bytes":5,"origin":null}]}
    ```
 
    When the AI filter is on, it checks a new message for up to about one minute. The
@@ -98,17 +98,17 @@ example `https://api.revdoku.com/v1/projects`. The SDK takes the origin without
    ```
 
    Run **Download attachment**. It prints the saved path. The example never overwrites a file.
-5. **Run List files** to see the files in the project. They are a read-only copy of the project's GitHub repository.
+5. **Run List files** to see the files in the project: `_repo/` is a read-only copy of the project's GitHub repository, and `_kb/` is the knowledge base.
 
 ## Understand the results
 
 | Value | Meaning |
 | --- | --- |
 | `data.message` | The message from `getTicketMessage` (TypeScript) or `get_ticket_message` (Python). `data.messages` lists the messages of a ticket, and `data.tickets` lists tickets. |
-| `body_status` | `complete`, `empty`, `truncated` or `unavailable`. `body_text` can be null. |
+| `body_status` | `complete`, `empty`, `truncated`, `unavailable` or `withheld`. `body_text` can be null. |
 | Ticket `id` | The `tkt_...` ID of the conversation. `number` is the short number that people see. |
-| Message `id` | The Revdoku `eml_...` ID. The sender's `message_id` header is a different value. |
-| Attachment `id` | The `df_...` ID from the attachment metadata of the message. |
+| Message `id` | The Revdoku `eml_...` ID. The sender's Message-ID header is a different value: `headers.message_id`. |
+| Attachment `id` | The `eat_...` ID from the attachment metadata of the message. |
 | `data.download` | A temporary URL and metadata, from the link request for an attachment. |
 
 The names above are JSON names. See [SDK fields and errors](#sdk-fields-and-errors) for the names in this SDK.

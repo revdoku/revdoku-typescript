@@ -25,25 +25,34 @@ const seen = new Set<string>();
 for (;;) {
   const { data: page } = await client.listTickets({ projectId, limit: 100, status: 'open', cursor });
   for (const ticket of page.tickets) {
-    const { data: thread } = await client.listTicketMessages({ projectId, ticketId: ticket.id });
-    for (const summary of thread.messages) {
-      if (summary.direction !== 'received') continue;
-      if (summary.labels.some(label => label.name === 'Junk')) continue; // Revdoku withholds junk content.
-      const message = await readMessage(ticket.id, summary.id);
-      if (!message) {
-        console.error(`${summary.id} is still being checked. Run again later.`);
-        continue;
+    // A page holds 20 messages by default: follow the cursor until hasMore is false.
+    let messageCursor: string | undefined;
+    const seenMessages = new Set<string>();
+    for (;;) {
+      const { data: thread } = await client.listTicketMessages({ projectId, ticketId: ticket.id, cursor: messageCursor });
+      for (const summary of thread.messages) {
+        if (summary.direction !== 'received') continue;
+        if (summary.labels.some(label => label.name === 'Junk')) continue; // Revdoku withholds junk content.
+        const message = await readMessage(ticket.id, summary.id);
+        if (!message) {
+          console.error(`${summary.id} is still being checked. Run again later.`);
+          continue;
+        }
+        console.log(JSON.stringify({
+          ticket_id: ticket.id,
+          number: ticket.number,
+          channel: ticket.channel,
+          id: message.id,
+          subject: message.subject,
+          body_status: message.bodyStatus,
+          body_text: message.bodyText,
+          attachments: message.attachments,
+        }));
       }
-      console.log(JSON.stringify({
-        ticket_id: ticket.id,
-        number: ticket.number,
-        channel: ticket.channel,
-        id: message.id,
-        subject: message.subject,
-        body_status: message.bodyStatus,
-        body_text: message.bodyText,
-        attachments: message.attachments,
-      }));
+      if (!thread.pagination.hasMore) break;
+      messageCursor = thread.pagination.nextCursor ?? undefined;
+      if (!messageCursor || seenMessages.has(messageCursor)) throw new Error('Message pagination did not advance');
+      seenMessages.add(messageCursor);
     }
   }
   if (!page.pagination.hasMore) break;

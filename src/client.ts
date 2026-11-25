@@ -125,12 +125,12 @@ export class Revdoku {
 
   /** Creates one project with its email address. After an uncertain result, list projects before you create another. */
   createProject(input: Omit<ProjectCreate, 'email'> & {
-    username?: string; domain?: string; accountId?: string;
+    username?: string; domain?: string;
   } = {}, options: RequestOptions = {}) {
     const { username, domain, accountId, ...project } = input;
-    return this.api.createProject({ createProjectRequest: {
-      accountId: accountId ?? this.accountId,
-      project: { ...project, ...(username !== undefined || domain !== undefined ? { email: { username, domain } } : {}) }
+    return this.api.createProject({ projectCreate: {
+      ...project, accountId: accountId ?? this.accountId,
+      ...(username !== undefined || domain !== undefined ? { email: { username, domain } } : {})
     } }, options);
   }
 
