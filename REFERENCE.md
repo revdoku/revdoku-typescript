@@ -619,7 +619,7 @@ Parameters: `projectId` (string, required), `ticketId` (string, required), `acco
 
 `client.replyToTicket({ projectId, ticketId, text })`. Full API: `client.api.replyToTicket({ projectId, ticketId, ticketReplyRequest })`.
 
-Requires project write permission. Revdoku sends only replies: the reply goes to the ticket's requester, the verified sender of its newest received message. A ticket without one, such as an earlier page feedback email, returns 403 EMAIL_RECIPIENT_NOT_ALLOWED. The reply is sent at once. A reply to Junk email returns 403 EMAIL_WITHHELD; one that AI labels are still checking returns 503 EMAIL_LABELING_PENDING with Retry-After. The subject starts with [#number]. On the Free plan, the email ends with one line about Revdoku. Delivery is asynchronous. After an unknown result, read the ticket before you send again.
+Requires project write permission. Revdoku sends only replies: the reply goes to the ticket's requester, the verified sender of its newest received message. A ticket without one, such as an earlier page feedback email, returns 403 EMAIL_RECIPIENT_NOT_ALLOWED. The reply is sent at once. A reply to Junk email returns 403 EMAIL_WITHHELD; one that AI labels are still checking returns 503 EMAIL_LABELING_PENDING with Retry-After. The subject starts with [#number]. On the Free plan, the email ends with one line about Revdoku. Uses credits; see https://app.revdoku.com/pricing.json. Too few credits return 402 INSUFFICIENT_CREDITS, and nothing is sent. Delivery is asynchronous. After an unknown result, read the ticket before you send again.
 
 Parameters: `projectId` (string, required), `ticketId` (string, required).
 
